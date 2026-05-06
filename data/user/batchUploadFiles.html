@@ -4,36 +4,36 @@
 <head>
     <meta charset="UTF-8">
     <title>批量上传</title>
-    <link rel="stylesheet" type="text/css" th:href="@{batchUploadFiles.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{commonControlPanel.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{commonTransfer.css}">
-    <script type="text/javascript" th:src="@{constants.js}"></script>
-    <script type="text/javascript" th:src="@{commonUtils.js}"></script>
-    <script type="text/javascript" th:src="@{commonFiles.js}"></script>
-    <script type="text/javascript" th:src="@{commonTransfer.js}"></script>
-    <script type="text/javascript" th:src="@{batchUploadFiles.js}"></script>
-    <link rel="icon" type="image/png" th:href="@{img/logo.png}">
-    <script th:src="@{live2d_3/js/jquery.min.js}"></script>
-    <script th:src="@{live2d_3/js/bootstrap.min.js}"></script>
+    <link rel="stylesheet" type="text/css" href="/user/batchUploadFiles.css">
+    <link rel="stylesheet" type="text/css" href="/user/commonControlPanel.css">
+    <link rel="stylesheet" type="text/css" href="/user/commonTransfer.css">
+    <script type="text/javascript" src="/user/constants.js"></script>
+    <script type="text/javascript" src="/user/commonUtils.js"></script>
+    <script type="text/javascript" src="/user/commonFiles.js"></script>
+    <script type="text/javascript" src="/user/commonTransfer.js"></script>
+    <script type="text/javascript" src="/user/batchUploadFiles.js"></script>
+    <link rel="icon" type="image/png" href="/user/img/logo.png">
+    <script src="/user/live2d_3/js/jquery.min.js"></script>
+    <script src="/user/live2d_3/js/bootstrap.min.js"></script>
     <!-- Live2DCubismCore -->
-    <script th:src="@{live2d_3/js/live2dcubismcore.min.js}"></script>
+    <script src="/user/live2d_3/js/live2dcubismcore.min.js"></script>
     <!-- Include Pixi. -->
-    <script th:src="@{live2d_3/js/pixi.min.js}"></script>
+    <script src="/user/live2d_3/js/pixi.min.js"></script>
     <!-- Include Cubism Components. -->
-    <script th:src="@{live2d_3/js/live2dcubismframework.js}"></script>
-    <script th:src="@{live2d_3/js/live2dcubismpixi.js}"></script>
+    <script src="/user/live2d_3/js/live2dcubismframework.js"></script>
+    <script src="/user/live2d_3/js/live2dcubismpixi.js"></script>
     <!-- User's Script -->
-    <script th:src="@{live2d_3/js/charData.js}"></script>
-    <script th:src="@{live2d_3/js/l2d.js}"></script>
-    <script th:src="@{live2d_3/js/main.js}"></script>
+    <script src="/user/live2d_3/js/charData.js"></script>
+    <script src="/user/live2d_3/js/l2d.js"></script>
+    <script src="/user/live2d_3/js/main.js"></script>
 
-    <script th:src="@{sockjs.js}"></script>
+    <script src="/user/sockjs.js"></script>
 </head>
 
 <body onload="initHandlers()">
     <div class="uploadStatus">
         <div id="stopButton" onclick="stopTransfer()">
-            <img th:src="@{img/ic_fluent_dismiss_48_regular.svg}" alt="停止">
+            <img src="/user/img/ic_fluent_dismiss_48_regular.svg" alt="停止">
         </div>
         <span class="title">传输状态</span>
         <ul class="statusList">
@@ -92,13 +92,13 @@
         </div>
     </div>
     <div class="settings" onclick="switchControlPanel()">
-        <img th:src="@{img/settings.svg}" alt="设置">
+        <img src="/user/img/settings.svg" alt="设置">
     </div>
     <div class="batchUploadFiles">
         <div class="batchUploadFiles-top">批量上传</div>
         <div class="batchUploadFiles-center clearfix">
             <div class="batchUploadFiles-center-img">
-                <img th:src="@{img/download_link.svg}" alt="主机地址">
+                <img src="/user/img/download_link.svg" alt="主机地址">
             </div>
             <div class="batchUploadFiles-center-input">
                 <label for="uploadHost"></label><input id="uploadHost" type="text" name value placeholder="请输入主机地址"
@@ -108,7 +108,7 @@
         </div>
         <div class="batchUploadFiles-center clearfix">
             <div class="batchUploadFiles-center-img">
-                <img th:src="@{img/name.svg}" alt="用户名">
+                <img src="/user/img/name.svg" alt="用户名">
             </div>
             <div class="batchUploadFiles-center-input">
                 <label for="username"></label><input id="username" type="text" name value placeholder="请输入您的用户名"
@@ -118,7 +118,7 @@
         </div>
         <div class="batchUploadFiles-center clearfix">
             <div class="batchUploadFiles-center-img">
-                <img th:src="@{img/password.svg}" alt="密码">
+                <img src="/user/img/password.svg" alt="密码">
             </div>
             <div class="batchUploadFiles-center-input">
                 <label for="password"></label><input id="password" type="password" name value placeholder="请输入您的密码"
@@ -128,7 +128,7 @@
         </div>
         <div class="batchUploadFiles-center clearfix">
             <div class="batchUploadFiles-center-img">
-                <img th:src="@{img/upload_location.svg}" alt="上传路径">
+                <img src="/user/img/upload_location.svg" alt="上传路径">
             </div>
             <div class="batchUploadFiles-center-input">
                 <label for="uploadPath"></label><input id="uploadPath" type="text" name value
@@ -138,7 +138,7 @@
         </div>
         <div class="batchUploadFiles-center clearfix">
             <div class="batchUploadFiles-center-img">
-                <img th:src="@{img/ic_fluent_save_24_regular.svg}" alt="保存路径">
+                <img src="/user/img/ic_fluent_save_24_regular.svg" alt="保存路径">
             </div>
             <div class="batchUploadFiles-center-input">
                 <label for="savePath"></label><input id="savePath" type="text" name value placeholder="请输入保存路径"

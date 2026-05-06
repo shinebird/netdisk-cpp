@@ -3,35 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>批量下载</title>
-    <link rel="stylesheet" type="text/css" th:href="@{downloadAndExtract.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{commonControlPanel.css}">
-    <link rel="stylesheet" type="text/css" th:href="@{commonTransfer.css}">
-    <script type="text/javascript" th:src="@{constants.js}"></script>
-    <script type="text/javascript" th:src="@{commonUtils.js}"></script>
-    <script type="text/javascript" th:src="@{commonFiles.js}"></script>
-    <script type="text/javascript" th:src="@{commonTransfer.js}"></script>
-    <script th:src="@{downloadAndExtract.js}"></script>
-    <link rel="icon" type="image/png" th:href="@{img/logo.png}">
-    <script th:src="@{live2d_3/js/jquery.min.js}"></script>
-    <script th:src="@{live2d_3/js/bootstrap.min.js}"></script>
+    <link rel="stylesheet" type="text/css" href="/user/downloadAndExtract.css">
+    <link rel="stylesheet" type="text/css" href="/user/commonControlPanel.css">
+    <link rel="stylesheet" type="text/css" href="/user/commonTransfer.css">
+    <script type="text/javascript" src="/user/constants.js"></script>
+    <script type="text/javascript" src="/user/commonUtils.js"></script>
+    <script type="text/javascript" src="/user/commonFiles.js"></script>
+    <script type="text/javascript" src="/user/commonTransfer.js"></script>
+    <script src="/user/downloadAndExtract.js"></script>
+    <link rel="icon" type="image/png" href="/user/img/logo.png">
+    <script src="/user/live2d_3/js/jquery.min.js"></script>
+    <script src="/user/live2d_3/js/bootstrap.min.js"></script>
     <!-- Live2DCubismCore -->
-    <script th:src="@{live2d_3/js/live2dcubismcore.min.js}"></script>
+    <script src="/user/live2d_3/js/live2dcubismcore.min.js"></script>
     <!-- Include Pixi. -->
-    <script th:src="@{live2d_3/js/pixi.min.js}"></script>
+    <script src="/user/live2d_3/js/pixi.min.js"></script>
     <!-- Include Cubism Components. -->
-    <script th:src="@{live2d_3/js/live2dcubismframework.js}"></script>
-    <script th:src="@{live2d_3/js/live2dcubismpixi.js}"></script>
+    <script src="/user/live2d_3/js/live2dcubismframework.js"></script>
+    <script src="/user/live2d_3/js/live2dcubismpixi.js"></script>
     <!-- User's Script -->
-    <script th:src="@{live2d_3/js/charData.js}"></script>
-    <script th:src="@{live2d_3/js/l2d.js}"></script>
-    <script th:src="@{live2d_3/js/main.js}"></script>
+    <script src="/user/live2d_3/js/charData.js"></script>
+    <script src="/user/live2d_3/js/l2d.js"></script>
+    <script src="/user/live2d_3/js/main.js"></script>
 
-    <script th:src="@{sockjs.js}"></script>
+    <script src="/user/sockjs.js"></script>
 </head>
 <body onload="initHandlers()">
     <div class="downloadStatus">
         <div id="stopButton" onclick="stopTransfer()">
-            <img th:src="@{img/ic_fluent_dismiss_48_regular.svg}" alt="停止">
+            <img src="/user/img/ic_fluent_dismiss_48_regular.svg" alt="停止">
         </div>
         <span class="title">传输状态</span>
         <ul class="statusList">
@@ -62,7 +62,7 @@
         </div>
     </div>
     <div class="settings" onclick="switchControlPanel()">
-        <img th:src="@{img/settings.svg}" alt="设置">
+        <img src="/user/img/settings.svg" alt="设置">
     </div>
     <div class="downloadAndExtract">
         <div class="downloadAndExtract-top">
@@ -70,7 +70,7 @@
         </div>
         <div class="downloadAndExtract-center clearfix">
             <div class="downloadAndExtract-center-img">
-                <img th:src="@{img/download_link.svg}" alt="下载链接">
+                <img src="/user/img/download_link.svg" alt="下载链接">
             </div>
             <div class="downloadAndExtract-center-input">
                 <label for="downloadLink"></label><input id="downloadLink" type="text" name value placeholder="请输入下载链接" onfocus="this.placeholder=''" onblur="this.placeholder='请输入下载链接'">
@@ -79,7 +79,7 @@
         </div>
         <div class="downloadAndExtract-center clearfix">
             <div class="downloadAndExtract-center-img">
-                <img th:src="@{img/ic_fluent_save_24_regular.svg}" alt="保存路径">
+                <img src="/user/img/ic_fluent_save_24_regular.svg" alt="保存路径">
             </div>
             <div class="downloadAndExtract-center-input">
                 <label for="path"></label><input id="path" type="text" name value placeholder="请输入保存路径" onfocus="this.placeholder=''" onblur="this.placeholder='请输入保存路径'">
