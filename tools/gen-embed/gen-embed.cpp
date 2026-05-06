@@ -80,8 +80,8 @@ auto main(int argc, char* argv[]) -> int
     {
         if (entry.is_regular_file())
         {
-            embed_data_paths.emplace_back(std::bit_cast<char* const>(
-                entry.path().lexically_relative(path_to_folder).generic_u8string().data()));
+            embed_data_paths.emplace_back(std::string("/").append(std::bit_cast<char* const>(
+                entry.path().lexically_relative(path_to_folder).generic_u8string().data())));
             std::println(embed_data_cpp_stream, embed_line_format, index,
                          std::bit_cast<char* const>(
                              std::filesystem::absolute(entry.path()).generic_u8string().data()));
