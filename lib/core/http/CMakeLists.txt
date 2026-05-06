@@ -1,0 +1,20 @@
+find_package(Boost REQUIRED)
+find_package(OpenSSL COMPONENTS Crypto SSL REQUIRED)
+find_package(msft_proxy4 REQUIRED)
+
+# find_package(LLVM REQUIRED)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+
+string(REGEX REPLACE "/include.*$" "" Boost_ROOT ${Boost_INCLUDE_DIRS})
+set(Boost_LIBRARY_DIR "${Boost_ROOT}/lib" CACHE PATH "${Boost_ROOT}/lib")
+
+add_library(NetdiskCoreHTTP STATIC Server.cpp Connection.cpp config/CORS.cpp Config.cpp ${generated_sources})
+add_library(Netdisk::Core::HTTP ALIAS NetdiskCoreHTTP)
+target_include_directories(NetdiskCoreHTTP PUBLIC ${Boost_INCLUDE_DIRS})
+target_include_directories(NetdiskCoreHTTP PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(NetdiskCoreHTTP PUBLIC ${CMAKE_BINARY_DIR})
+target_link_directories(NetdiskCoreHTTP PUBLIC ${Boost_LIBRARY_DIR})
+target_link_libraries(NetdiskCoreHTTP PUBLIC OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(NetdiskCoreHTTP PUBLIC msft_proxy4::proxy)
+target_link_libraries(NetdiskCoreHTTP PUBLIC Netdisk::Utils)
+add_dependencies(NetdiskCoreHTTP NetdiskEmbedDataSources NetdiskMimeTypesSources)

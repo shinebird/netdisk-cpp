@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>文件列表</title>
+    <link rel="stylesheet" type="text/css" th:href="@{files.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{commonControlPanel.css}">
+    <script type="text/javascript" th:src="@{commonUtils.js}"></script>
+    <script type="text/javascript" th:src="@{commonFiles.js}"></script>
+    <script type="text/javascript" th:src="@{constants.js}"></script>
+    <script type="text/javascript" th:src="@{files.js}"></script>
+    <link rel="icon" type="image/png" th:href="@{img/logo.png}">
+    <script th:src="@{live2d_3/js/jquery.min.js}"></script>
+    <script th:src="@{live2d_3/js/bootstrap.min.js}"></script>
+    <!-- Live2DCubismCore -->
+    <script th:src="@{live2d_3/js/live2dcubismcore.min.js}"></script>
+    <!-- Include Pixi. -->
+    <script th:src="@{live2d_3/js/pixi.min.js}"></script>
+    <!-- Include Cubism Components. -->
+    <script th:src="@{live2d_3/js/live2dcubismframework.js}"></script>
+    <script th:src="@{live2d_3/js/live2dcubismpixi.js}"></script>
+    <!-- User's Script -->
+    <script th:src="@{live2d_3/js/charData.js}"></script>
+    <script th:src="@{live2d_3/js/l2d.js}"></script>
+    <script th:src="@{live2d_3/js/main.js}"></script>
+</head>
+<body onload="adjustElementSize(); initHandlers(); getFileInfos();">
+    <div>
+        <ul class="navList">
+            <li class="leftItem" onclick="getParentDirInfo()"><a>上一级</a></li>
+            <li class="rightItem" onclick="switchControlPanel()"><a>设置</a></li>
+        </ul>
+    </div>
+    <div class="iconPreviewPanelBackground" onclick="showIconPreviewPanel()">
+        <div class="iconPreviewPanel">
+            <span class="title">图标预览</span>
+        </div>
+    </div>
+    <div class="controlPanelBackground" onclick="switchControlPanel()">
+        <div class="controlPanel">
+            <span class="title">控制面板</span>
+            <ul>
+                <li>
+                    <label for="compressMethod">压缩方法</label>
+                    <select id="compressMethod" onchange="setCompressMethod()">
+                        <option value="zip">ZIP</option>
+                        <option value="xz">XZ</option>
+                        <option value="zstd">ZStandard</option>
+                        <option value="tar">TAR</option>
+                        <option value="gzip">GZIP</option>
+                        <option value="bzip2">BZIP2</option>
+                    </select>
+                </li>
+                <li>
+                    <label for="compressLevel">压缩等级</label>
+                    <select id="compressLevel" onchange="setCompressLevel()">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                </li>
+                <li>
+                    <label for="sortMethod">排序方式</label>
+                    <select id="sortMethod" onchange="setSortMethod()">
+                        <option value="byDate">修改日期</option>
+                        <option value="byName">名称</option>
+                        <option value="bySize">文件大小</option>
+                        <option value="byExt">文件类型</option>
+                    </select>
+                    <label style="float: right" for="descending">降序</label>
+                    <input class="checkbox" style="float: right" type="checkbox" id="descending" onchange="setSortMethod()">
+                </li>
+                <li>
+                    <label for="useCheckbox">多选框</label>
+                    <input class="checkbox" style="float: right; margin-right: 12px" type="checkbox" id="useCheckbox" onchange="setShowCheckbox()">
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div id="panel">
+        <div class="Canvas left" style="position: fixed; margin-top: 70vh; margin-left: -3%; z-index: 2">
+            <canvas width="400" height="300" style="touch-action: none; width: 25vw; height: 14.0625vw; cursor: inherit;"></canvas>
+        </div>
+        <div class="sideBar">
+            <ul class="fileTypeList">
+                <li class="fileType" onclick="getFileInfos()">
+                    <span>全部文件</span>
+                </li>
+            </ul>
+        </div>
+        <div class="filePanel">
+            <div class="fileOperationList">
+                <ul id="fileOperationList">
+                    <li class="fileOperation">
+                        <a id="downloadLink">下载</a>
+                    </li>
+                    <li class="fileOperation">
+                        <a id="downloadZip">下载Zip</a>
+                    </li>
+                    <li class="fileOperation">
+                        <a id="batchDownloadLink">批量下载</a>
+                    </li>
+                    <li class="fileOperation">
+                        <form id="fileUploadText">
+                            上传 <input type="file" id="fileUpload" name="上传" multiple="multiple">
+                        </form>
+
+                    </li>
+                    <li class="fileOperation" id="uploadBar">
+                        <div id="bar-warp">
+                            <div id="bar"></div>
+                        </div>
+                        <span id="percent"></span>
+                    </li>
+                    <li class="search">
+                        <label for="goToPath"></label>
+                        <input type="text" placeholder="请输入..." name="" id="goToPath" value=""/>
+                        <button onclick="goToPath()">转到</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="fileList">
+                <ul id="fileList">
+                </ul>
+            </div>
+
+            <div class="fileInfoPanel">
+                <span>文件信息</span>
+                <div class="fileIcon" onclick="showIconPreviewPanel()"></div>
+                <ul class="fileInfoList">
+                    <li class="fileInfo">文件名：</li>
+                    <li class="fileInfo">文件大小：</li>
+                    <li class="fileInfo">最后修改时间：</li>
+                    <li class="fileInfo">当前目录：</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

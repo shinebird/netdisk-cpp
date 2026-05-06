@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>批量下载</title>
+    <link rel="stylesheet" type="text/css" th:href="@{downloadAndExtract.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{commonControlPanel.css}">
+    <link rel="stylesheet" type="text/css" th:href="@{commonTransfer.css}">
+    <script type="text/javascript" th:src="@{constants.js}"></script>
+    <script type="text/javascript" th:src="@{commonUtils.js}"></script>
+    <script type="text/javascript" th:src="@{commonFiles.js}"></script>
+    <script type="text/javascript" th:src="@{commonTransfer.js}"></script>
+    <script th:src="@{downloadAndExtract.js}"></script>
+    <link rel="icon" type="image/png" th:href="@{img/logo.png}">
+    <script th:src="@{live2d_3/js/jquery.min.js}"></script>
+    <script th:src="@{live2d_3/js/bootstrap.min.js}"></script>
+    <!-- Live2DCubismCore -->
+    <script th:src="@{live2d_3/js/live2dcubismcore.min.js}"></script>
+    <!-- Include Pixi. -->
+    <script th:src="@{live2d_3/js/pixi.min.js}"></script>
+    <!-- Include Cubism Components. -->
+    <script th:src="@{live2d_3/js/live2dcubismframework.js}"></script>
+    <script th:src="@{live2d_3/js/live2dcubismpixi.js}"></script>
+    <!-- User's Script -->
+    <script th:src="@{live2d_3/js/charData.js}"></script>
+    <script th:src="@{live2d_3/js/l2d.js}"></script>
+    <script th:src="@{live2d_3/js/main.js}"></script>
+
+    <script th:src="@{sockjs.js}"></script>
+</head>
+<body onload="initHandlers()">
+    <div class="downloadStatus">
+        <div id="stopButton" onclick="stopTransfer()">
+            <img th:src="@{img/ic_fluent_dismiss_48_regular.svg}" alt="停止">
+        </div>
+        <span class="title">传输状态</span>
+        <ul class="statusList">
+            <li class="status" id="currentFile">当前文件：</li>
+            <li class="status" id="fileSize">文件大小：</li>
+            <li class="status" id="fileNum">已传输个数：</li>
+            <li class="status" id="speed">速度：</li>
+            <li class="status" id="percent">当前文件进度：</li>
+        </ul>
+    </div>
+    <div class="controlPanelBackground" onclick="switchControlPanel()">
+        <div class="controlPanel">
+            <span class="title">控制面板</span>
+            <ul>
+                <li>
+                    <label for="useProxy">使用代理</label>
+                    <input class="inputCheck" type="checkbox" id="useProxy" onchange="setUseProxy()">
+                </li>
+                <li>
+                    <label for="proxyHostName">代理主机</label>
+                    <input class="inputText" type="text" id="proxyHostName" onchange="setProxyHostName()">
+                </li>
+                <li>
+                    <label for="proxyPort">代理端口</label>
+                    <input class="inputText" type="text" id="proxyPort" onchange="setProxyPort()">
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="settings" onclick="switchControlPanel()">
+        <img th:src="@{img/settings.svg}" alt="设置">
+    </div>
+    <div class="downloadAndExtract">
+        <div class="downloadAndExtract-top">
+            批量下载
+        </div>
+        <div class="downloadAndExtract-center clearfix">
+            <div class="downloadAndExtract-center-img">
+                <img th:src="@{img/download_link.svg}" alt="下载链接">
+            </div>
+            <div class="downloadAndExtract-center-input">
+                <label for="downloadLink"></label><input id="downloadLink" type="text" name value placeholder="请输入下载链接" onfocus="this.placeholder=''" onblur="this.placeholder='请输入下载链接'">
+                <div class="downloadAndExtract-center-input-text">下载链接</div>
+            </div>
+        </div>
+        <div class="downloadAndExtract-center clearfix">
+            <div class="downloadAndExtract-center-img">
+                <img th:src="@{img/ic_fluent_save_24_regular.svg}" alt="保存路径">
+            </div>
+            <div class="downloadAndExtract-center-input">
+                <label for="path"></label><input id="path" type="text" name value placeholder="请输入保存路径" onfocus="this.placeholder=''" onblur="this.placeholder='请输入保存路径'">
+                <div class="downloadAndExtract-center-input-text">保存路径</div>
+            </div>
+        </div>
+        <div class="downloadAndExtract-button" onclick="startTransfer()">开始下载</div>
+
+    </div>
+    <div class="Canvas left" style="position: absolute; margin-top: 75vh; margin-left: -3%; z-index: 2">
+        <canvas width="400" height="300" style="touch-action: none; width: 20vw; height: 11.25vw; cursor: inherit;"></canvas>
+    </div>
+</body>
+</html>

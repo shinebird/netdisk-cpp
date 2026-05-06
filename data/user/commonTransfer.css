@@ -1,0 +1,12 @@
+#stopButton
+{
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+
+#stopButton img
+{
+    width: 20px;
+    height: 20px;
+}

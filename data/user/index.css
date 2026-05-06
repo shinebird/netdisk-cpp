@@ -1,0 +1,41 @@
+div.extensions .extension
+{
+    display: inline;
+    float: left;
+    height: 20vh;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: lightgray;
+    margin: 10px;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    text-align: center;
+    box-shadow: 0 0 5px #333333;
+}
+div.extensions .extension:hover
+{
+    border-color: darkgray;
+    background-color: rgba(212, 239, 250, 0.21);
+    transition:transform 1s;
+}
+div.extensions .extension span
+{
+    display: inline;
+    color: dodgerblue;
+    pointer-events: none;
+}
+div.extensions .extension img
+{
+    margin: 4px;
+    pointer-events: none;
+}
+div.extensions
+{
+    z-index: 2;
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+}

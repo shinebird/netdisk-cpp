@@ -1,0 +1,104 @@
+
+div.controlPanelBackground
+{
+    background-color: rgba(108, 117, 125, 0.3);
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    z-index: 5;
+    display: none;
+}
+
+div.controlPanelBackground .controlPanel
+{
+    width: 40%;
+    height: 40%;
+    padding: 14px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    background-color: white;
+    position: fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    list-style-position: initial;
+    list-style-image: initial;
+    list-style-type: none;
+    overflow: auto;
+}
+
+div.controlPanel span.title
+{
+    color: dodgerblue;
+    font-size: x-large;
+    margin-left: 3%;
+    margin-top: 3%;
+}
+
+div.controlPanel ul
+{
+    list-style-position: initial;
+    list-style-image: initial;
+    list-style-type: none;
+    margin-top: 3%;
+}
+
+div.controlPanel ul li
+{
+    list-style-position: initial;
+    list-style-image: initial;
+    list-style-type: none;
+    margin-top: 20px;
+}
+
+div.controlPanel ul li select
+{
+    border-radius: 2px;
+    float: right;
+    height: 30px;
+    width: 100px;
+    outline: none;
+    border: 1px solid dodgerblue;
+    margin-right: 10px;
+    font-size: medium;
+}
+
+div.controlPanel ul li option
+{
+    float: right;
+    height: 30px;
+    font-size: medium;
+    color: dodgerblue;
+    border-style: none;
+    outline: none;
+    margin-right: 5%;
+}
+
+div.controlPanel ul li input.inputCheck
+{
+    float: right;
+    height: 18px;
+    width: 18px;
+    font-size: medium;
+    color: dodgerblue;
+    border-style: none;
+    outline: none;
+    margin-right: 5%;
+}
+
+div.controlPanel ul li input.inputText
+{
+    float: right;
+    height: 20px;
+    width: 150px;
+    font-size: medium;
+    border: 1px solid dodgerblue;
+    outline: none;
+    margin-right: 2%;
+}
+
+div.controlPanel ul li label
+{
+    font-size: medium;
+}

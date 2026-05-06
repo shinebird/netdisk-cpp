@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>主页</title>
+    <link rel="stylesheet" type="text/css" th:href="@{index.css}">
+    <script th:src="@{index.js}"></script>
+    <link rel="icon" type="image/png" th:href="@{img/logo.png}">
+    <script th:src="@{live2d_3/js/jquery.min.js}"></script>
+    <script th:src="@{live2d_3/js/bootstrap.min.js}"></script>
+    <!-- Live2DCubismCore -->
+    <script th:src="@{live2d_3/js/live2dcubismcore.min.js}"></script>
+    <!-- Include Pixi. -->
+    <script th:src="@{live2d_3/js/pixi.min.js}"></script>
+    <!-- Include Cubism Components. -->
+    <script th:src="@{live2d_3/js/live2dcubismframework.js}"></script>
+    <script th:src="@{live2d_3/js/live2dcubismpixi.js}"></script>
+    <!-- User's Script -->
+    <script th:src="@{live2d_3/js/charData.js}"></script>
+    <script th:src="@{live2d_3/js/l2d.js}"></script>
+    <script th:src="@{live2d_3/js/main.js}"></script>
+</head>
+<body onload="adjustElementSize(); setLinks();">
+    <div class="extensions">
+        <div class="extension" id="netdisk">
+            <img class="extensionIcon" th:src="@{img/netdisk.svg}" alt="网盘">
+            <span>网盘</span>
+        </div>
+        <div class="extension" id="downloadAndExtract">
+            <img class="extensionIcon" th:src="@{img/download_and_extract.svg}" alt="批量下载">
+            <span>批量下载</span>
+        </div>
+        <div class="extension" id="batchUploadFiles">
+            <img class="extensionIcon" th:src="@{img/batch_upload_files.svg}" alt="批量上传">
+            <span>批量上传</span>
+        </div>
+    </div>
+    <div class="Canvas left" style="position: absolute; margin-top: 75vh; margin-left: -3%; z-index: 2">
+        <canvas width="400" height="300" style="touch-action: none; width: 20vw; height: 11.25vw; cursor: inherit;"></canvas>
+    </div>
+</body>
+</html>

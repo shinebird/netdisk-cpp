@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <link rel="stylesheet" type="text/css" th:href="@{login.css}">
+    <script th:src="@{login.js}"></script>
+    <link rel="icon" type="image/png" th:href="@{img/logo.png}">
+    <script th:src="@{live2d_3/js/jquery.min.js}"></script>
+    <script th:src="@{live2d_3/js/bootstrap.min.js}"></script>
+    <!-- Live2DCubismCore -->
+    <script th:src="@{live2d_3/js/live2dcubismcore.min.js}"></script>
+    <!-- Include Pixi. -->
+    <script th:src="@{live2d_3/js/pixi.min.js}"></script>
+    <!-- Include Cubism Components. -->
+    <script th:src="@{live2d_3/js/live2dcubismframework.js}"></script>
+    <script th:src="@{live2d_3/js/live2dcubismpixi.js}"></script>
+    <!-- User's Script -->
+    <script th:src="@{live2d_3/js/charData.js}"></script>
+    <script th:src="@{live2d_3/js/l2d.js}"></script>
+    <script th:src="@{live2d_3/js/main.js}"></script>
+</head>
+<body onkeyup="enterLogin(event)">
+    <div class="login">
+        <div class="login-top">
+            登录
+        </div>
+        <div class="login-center clearfix">
+            <div class="login-center-img">
+                <img th:src="@{img/name.svg}" alt="用户名">
+            </div>
+            <div class="login-center-input">
+                <label for="username"></label><input id="username" type="text" name value placeholder="请输入您的用户名" onfocus="this.placeholder=''" onblur="this.placeholder='请输入您的用户名'">
+                <div class="login-center-input-text" >用户名</div>
+            </div>
+        </div>
+        <div class="login-center clearfix">
+            <div class="login-center-img">
+                <img th:src="@{img/password.svg}" alt="密码">
+            </div>
+            <div class="login-center-input">
+                <label for="password"></label><input id="password" type="password" name value placeholder="请输入您的密码" onfocus="this.placeholder=''" onblur="this.placeholder='请输入您的密码'">
+                <div class="login-center-input-text">密码</div>
+            </div>
+        </div>
+        <div class="login-button" onclick="login()">登录</div>
+
+    </div>
+    <div class="Canvas left" style="position: absolute; margin-top: 75vh; margin-left: -3%; z-index: 2">
+        <canvas width="400" height="300" style="touch-action: none; width: 20vw; height: 11.25vw; cursor: inherit;"></canvas>
+    </div>
+</body>
+</html>

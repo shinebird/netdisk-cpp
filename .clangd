@@ -1,0 +1,66 @@
+CompileFlags:                     # Tweak the parse settings
+  Add: 
+  [
+    -fms-compatibility,
+    -fms-extensions,
+    '-D__INTEL_LLVM_COMPILER',
+    '-D__INTEL_CLANG_COMPILER',
+    '-D__PURE_INTEL_C99_HEADERS__',
+    '-ID:/Library/llvm-project/llvm/build1/release/include/c++/v1',
+    '-ID:/Library/llvm-project/llvm/build1/release/include/x86_64-pc-windows-msvc/c++/v1',
+    '-ID:/Software/IDE/Library/Intel/oneAPI/compiler/latest/windows/compiler/include',
+    '-ID:/Library/boost/build/install_zen5/include/boost-1_91', 
+    '-ID:/Library/opencv/build1/install_zen5/include', 
+    '-ID:/Software/IDE/Library/NVIDIA GPU Computing Toolkit/CUDA/v13.0/include',
+    '-Zc:__cplusplus',
+    '-clang:-fsafe-buffer-usage-suggestions',
+    '-Wall', 
+    '-Wextra',
+    '-Wno-c++98-compat',
+    '-Wno-c++98-compat-pedantic',
+    '-clang:-std=c++26'
+  ]
+  Remove: [-Q*, -fuse-complex-intrinsics, -W*, -w, /W*, /w]
+  Compiler: "D:\\Library\\llvm-project\\llvm\\build1\\release\\clang-cl.exe"
+Diagnostics:
+  ClangTidy:
+    Add: 
+    [
+      performance-*,
+      bugprone-*,
+      modernize*,
+      cppcoreguidelines-*,
+      readability-*,
+      concurrency-*,
+      boost-*,
+      openmp-*,
+      misc-*,
+    ]
+    Remove:
+    [
+      cppcoreguidelines-macro-to-enum,
+    ]
+    CheckOptions:
+      readability-identifier-naming.VariableCase: lower_case
+      readability-identifier-naming.NamespaceCase: lower_case
+      readability-identifier-naming.TemplateParameterCase: CamelCase
+      readability-identifier-naming.TemplateTemplateParameterCase: CamelCase
+      readability-identifier-naming.ClassCase: CamelCase
+      readability-identifier-naming.StructCase: CamelCase
+      readability-identifier-naming.FunctionCase: camelBack
+      readability-identifier-naming.MethodCase: camelBack
+      readability-identifier-naming.MemberCase: lower_case
+      readability-identifier-naming.ClassMemberSuffix: _
+      readability-identifier-naming.PublicMemberSuffix: _
+      readability-identifier-naming.ProtectedMemberSuffix: _
+      readability-identifier-naming.PrivateMemberSuffix: _
+      readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
+    
+InlayHints:
+  BlockEnd: Yes
+  Designators: Yes
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
+  DefaultArguments: Yes
+  TypeNameLimit: 0

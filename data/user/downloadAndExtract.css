@@ -1,0 +1,198 @@
+body
+{
+    font-size: 12px;
+    font-family: '微软雅黑',"宋体","Arial Narrow",Helvetica,sans-serif;
+    color: #000;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.downloadAndExtract
+{
+    z-index: 2;
+    position:absolute;
+    width: 600px;
+    border-radius: 5px;
+    height: 500px;
+    background: white;
+    box-shadow: 0 0 5px #333333;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    transition: all 1s;
+    -moz-transition: all 1s;	/* Firefox 4 */
+    -webkit-transition: all 1s;	/* Safari 和 Chrome */
+    -o-transition: all 1s;	/* Opera */
+}
+
+.downloadAndExtract-top
+{
+    font-size: 24px;
+    margin-top: 100px;
+    padding-left: 40px;
+    box-sizing: border-box;
+    color: #333333;
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+.downloadAndExtract-center
+{
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 40px;
+    margin-bottom: 30px;
+}
+.downloadAndExtract-center-img
+{
+    width: 20px;
+    height: 20px;
+    float: left;
+    margin-top: 5px;
+}
+
+.downloadAndExtract-center-img>img
+{
+    width: 100%;
+}
+
+.downloadAndExtract-center-input
+{
+    float: left;
+    width: 470px;
+    margin-left: 15px;
+    height: 30px;
+    position: relative;
+}
+
+.downloadAndExtract-center-input input
+{
+    z-index: 2;
+    transition: all 0.5s;
+    padding-left: 10px;
+    color: #333333;
+    width: 100%;
+    height: 30px;
+    border: 1px solid #ffffff;
+    border-bottom-color: #cccccc;
+    box-sizing: border-box;
+    outline: none;
+    position: relative;
+}
+
+.downloadAndExtract-center-input input:focus
+{
+    border: 1px solid dodgerblue;
+}
+
+.downloadAndExtract-center-input-text
+{
+    background: white;
+    padding: 0 5px;
+    position: absolute;
+    z-index: 0;
+    opacity: 0;
+    height: 20px;
+    top: 50%;
+    margin-top: -10px;
+    font-size: 14px;
+    left: 5px;
+    color: dodgerblue;
+    line-height: 20px;
+    transition: all 0.5s;
+    -moz-transition: all 0.5s;	/* Firefox 4 */
+    -webkit-transition: all 0.5s;	/* Safari 和 Chrome */
+    -o-transition: all 0.5s;	/* Opera */
+}
+
+.downloadAndExtract-center-input input:focus~.downloadAndExtract-center-input-text
+{
+    top: 0;
+    z-index: 3;
+    opacity: 1;
+    margin-top: -15px;
+}
+
+.downloadAndExtract.active
+{
+    -webkit-animation: downloadAndExtract-small 0.8s;
+    animation: downloadAndExtract-small 0.8s;
+    animation-fill-mode:forwards;
+    -webkit-animation-fill-mode:forwards
+}
+
+.downloadAndExtract-button
+{
+    cursor: pointer;
+    width: 250px;
+    text-align: center;
+    height: 40px;
+    line-height: 40px;
+    background-color: dodgerblue;
+    border-radius: 5px;
+    margin: 50px auto 0;
+    color: white;
+}
+
+.clearfix:after
+{
+    visibility: hidden;
+    display: block;
+    font-size: 0;
+    content: " ";
+    clear: both;
+    height: 0;
+}
+
+div.downloadStatus
+{
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 5px;
+    background: white;
+    box-shadow: 0 0 5px #333333;
+    width: 66vw;
+    position: absolute;
+    display: none;
+    transition: all 0.5s;
+    margin-inside: 5px;
+}
+
+ul.statusList
+{
+    list-style-type: none;
+    overflow: hidden;
+    background-color: white;
+    border-radius: 5px;
+    margin: 8px;
+}
+
+ul.statusList li
+{
+    font-size: medium;
+    margin: 8px;
+}
+
+div.downloadStatus span.title
+{
+    color: dodgerblue;
+    font-size: x-large;
+    margin: 25px;
+}
+
+div.settings
+{
+    z-index: 2;
+    position:absolute;
+    top: 10px;
+    right: 0;
+    width: 40px;
+    height: 40px;
+}
+
+div.settings img
+{
+    width: 30px;
+    height: 30px;
+}
