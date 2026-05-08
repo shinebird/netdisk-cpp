@@ -15,7 +15,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "gen-mime-types.h"
+#include "gen-mime-types.hpp"
 #include <netdisk-cpp/utils/string/StringUtils.hpp>
 
 
@@ -32,7 +32,7 @@ auto main(int argc, char* argv[]) -> int
     desc.add_options()("help,h", "Help screen")(
         "input", boost::program_options::value<std::string>(), "Mime-type CSV input")(
         "output,o", boost::program_options::value<std::string>(),
-        "Path to .cpp output, .h output will be generated in the same directory");
+        "Path to .cpp output, .hpp output will be generated in the same directory");
     positional_desc.add("input", -1);
     boost::program_options::command_line_parser command_line_parser{argc, argv};
     command_line_parser.options(desc)
@@ -154,13 +154,13 @@ auto main(int argc, char* argv[]) -> int
     std::filesystem::path mime_types_cpp_fs_path = mime_types_cpp_path;
     std::ofstream mime_types_cpp_stream(mime_types_cpp_path, std::ios::binary | std::ios::out);
     std::ofstream mime_types_h_stream(
-        mime_types_cpp_path.subview(0, mime_types_cpp_path.size() - 3) + std::string("h"),
+        mime_types_cpp_path.subview(0, mime_types_cpp_path.size() - 3) + std::string("hpp"),
         std::ios::binary | std::ios::out);
     std::println(mime_types_h_stream, mime_types_h_content);
     std::println(
         mime_types_cpp_stream, mime_types_cpp_begin,
         std::bit_cast<char* const>(
-            (mime_types_cpp_fs_path.stem().generic_u8string() + std::u8string(u8".h")).data()));
+            (mime_types_cpp_fs_path.stem().generic_u8string() + std::u8string(u8".hpp")).data()));
     std::string mime2ext_str(mime2ext_begin);
     std::string ext2mime_str(ext2mime_begin);
     using FlatStringViewSet = std::flat_set<std::string_view, std::less<>>;

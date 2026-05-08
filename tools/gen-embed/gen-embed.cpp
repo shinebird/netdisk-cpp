@@ -11,7 +11,7 @@
 
 #include <boost/program_options.hpp>
 
-#include "gen-embed.h"
+#include "gen-embed.hpp"
 
 static void printHelpMessage(const std::string_view& program_name)
 {
@@ -26,7 +26,7 @@ auto main(int argc, char* argv[]) -> int
     desc.add_options()("help,h", "Help screen")(
         "base-path", boost::program_options::value<std::string>(), "The base path to the data")(
         "output,o", boost::program_options::value<std::string>(),
-        "Path to .cpp output, .h output will be generated in the same directory");
+        "Path to .cpp output, .hpp output will be generated in the same directory");
     boost::program_options::command_line_parser command_line_parser{argc, argv};
     command_line_parser.options(desc).style(
         boost::program_options::command_line_style::default_style |
@@ -65,14 +65,14 @@ auto main(int argc, char* argv[]) -> int
     std::filesystem::path embed_data_cpp_fs_path = embed_data_cpp_path;
     std::ofstream embed_data_cpp_stream(embed_data_cpp_path, std::ios::binary | std::ios::out);
     std::ofstream embed_data_h_stream(
-        embed_data_cpp_path.subview(0, embed_data_cpp_path.size() - 3) + std::string("h"),
+        embed_data_cpp_path.subview(0, embed_data_cpp_path.size() - 3) + std::string("hpp"),
         std::ios::binary | std::ios::out);
     std::println(
         embed_data_cpp_stream, embed_cpp_begin,
         std::bit_cast<char* const>(
             std::filesystem::absolute(path_to_folder).generic_u8string().data()),
         std::bit_cast<char* const>(
-            (embed_data_cpp_fs_path.stem().generic_u8string() + std::u8string(u8".h")).data()));
+            (embed_data_cpp_fs_path.stem().generic_u8string() + std::u8string(u8".hpp")).data()));
     std::uint64_t index = 0;
     std::list<std::string> embed_data_paths;
     std::set<uint64_t> empty_file_indices;

@@ -1,15 +1,15 @@
 add_custom_command(
-    OUTPUT "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.cpp" "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.h"
+    OUTPUT "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.cpp" "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.hpp"
     COMMAND $<TARGET_FILE:gen-embed> "--base-path" "${CMAKE_SOURCE_DIR}/data" "-o" "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.cpp"
     DEPENDS gen-embed
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     COMMENT "Generating cpp embed file")
 add_library(NetdiskEmbedData STATIC "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.cpp")
 add_library(Netdisk::EmbedData ALIAS NetdiskEmbedData)
-add_custom_target(NetdiskEmbedDataSources DEPENDS "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.cpp" "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.h"
+add_custom_target(NetdiskEmbedDataSources DEPENDS "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.cpp" "${CMAKE_BINARY_DIR}/netdisk-cpp/embed_data/EmbedData.hpp"
 )
 
-add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.cpp" "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.h"
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.cpp" "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.hpp"
     COMMAND $<TARGET_FILE:gen-mime-types> "${CMAKE_SOURCE_DIR}/lib/utils/MimeTypes.csv" "-o" "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.cpp"
     DEPENDS gen-mime-types
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -17,7 +17,7 @@ add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.
 add_library(NetdiskMimeTypes STATIC "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.cpp")
 add_library(Netdisk::MimeTypes ALIAS NetdiskMimeTypes)
 target_include_directories(NetdiskMimeTypes PRIVATE "${CMAKE_BINARY_DIR}/mime_types")
-add_custom_target(NetdiskMimeTypesSources DEPENDS "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.cpp" "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.h"
+add_custom_target(NetdiskMimeTypesSources DEPENDS "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.cpp" "${CMAKE_BINARY_DIR}/netdisk-cpp/mime_types/MimeTypes.hpp"
 )
 
 find_package(Boost REQUIRED)
