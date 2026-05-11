@@ -42,8 +42,16 @@ namespace netdisk::utils::mime_type
     auto getMimeTypes(std::string_view file_extension)
         -> const std::flat_set<std::string_view, std::less<>>&
     {
-        return ::netdisk::data::file_extensions_to_mime_type_map.at(file_extension);
+        static const std::flat_set<std::string_view, std::less<>> default_mime_type = {
+            "application/octet-stream"};
+        const auto iter = ::netdisk::data::file_extensions_to_mime_type_map.find(file_extension);
+        if (iter != ::netdisk::data::file_extensions_to_mime_type_map.end())
+        {
+            return iter->second;
+        }
+        return default_mime_type;
     }
+
     auto getFileExtensions(std::string_view mime_type)
         -> const std::flat_set<std::string_view, std::less<>>&
     {

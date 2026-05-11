@@ -1,10 +1,13 @@
 #include "netdisk-cpp/core/http/Connection.hpp"
-#include "netdisk-cpp/mime_types/MimeTypes.h"
+#include "netdisk-cpp/mime_types/MimeTypes.hpp"
 #include "netdisk-cpp/utils/log/Logger.hpp"
 
+#include <boost/asio/redirect_error.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/http/dynamic_body_fwd.hpp>
+#include <boost/beast/http/error.hpp>
 #include <boost/beast/http/fields_fwd.hpp>
+#include <boost/beast/http/impl/write.hpp>
 #include <boost/beast/version.hpp>
 
 #include <filesystem>
@@ -17,8 +20,9 @@ namespace netdisk::core::http
                                 error_code);                                                       \
     if (error_code)                                                                                \
     {                                                                                              \
-        spdlog::get("multi_logger")                                                                \
-            ->warn(R"(Unable to add CORS headers for response "{}")", (request)->target());        \
+        SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"),                                            \
+                           R"(Unable to add CORS headers for response "{}")",                      \
+                           (request)->target());                                                   \
     }
 #define COMMON_SHUTDOWN_SSL                                                                        \
     if (!request_->keep_alive())                                                                   \
@@ -26,9 +30,9 @@ namespace netdisk::core::http
         if (socket_.next_layer().socket().shutdown(boost::asio::ip::tcp::socket::shutdown_send,    \
                                                    this->error_code_))                             \
         {                                                                                          \
-            spdlog::get("multi_logger")                                                            \
-                ->warn("An error occoured while shutting down SSL connection: {}",                 \
-                       this->error_code_.message());                                               \
+            SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"),                                        \
+                               "An error occoured while shutting down SSL connection: {}",         \
+                               this->error_code_.message());                                       \
         }                                                                                          \
     }
 
@@ -36,28 +40,60 @@ namespace netdisk::core::http
 
     auto Connection::getRequestProxy() -> Request& { return request_; }
 
+    auto Connection::staticBodyReply(boost::beast::http::status status, std::string_view msg,
+                                     std::size_t msg_size, std::string_view mime_type,
+                                     Config& config) -> boost::asio::awaitable<void>
+    {
+        boost::beast::http::response<boost::beast::http::buffer_body> res{status,
+                                                                          request_->version()};
+        res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
+        res.set(boost::beast::http::field::content_type, mime_type);
+        res.keep_alive(request_->keep_alive());
+        std::error_code error_code;
+        ADD_CORS_HEADERS(request_, res, error_code)
+        res.content_length(msg_size);
+        // res.prepare_payload();
+        boost::beast::http::response_serializer<boost::beast::http::buffer_body> serializer(res);
+        co_await boost::beast::http::async_write_header(socket_, serializer,
+                                                        boost::asio::use_awaitable);
+        std::size_t offset = 0;
+        constexpr std::size_t chunk_size = 64 * 1024;
+        boost::beast::error_code ec;
+        while (offset < msg_size)
+        {
+            std::size_t current_chunk_size = std::min(chunk_size, msg_size - offset);
+            res.body().data = (void*)(msg.data() + offset);
+            res.body().size = current_chunk_size;
+            res.body().more = (offset + current_chunk_size < msg_size);
+            co_await boost::beast::http::async_write(socket_, serializer,
+                                                     boost::asio::redirect_error(ec));
+            if (ec == boost::beast::http::error::need_buffer || (!ec))
+            {
+                offset += current_chunk_size;
+                ec = {};
+            }
+            else
+            {
+                throw boost::beast::system_error(ec);
+            }
+        }
+        res.body().data = nullptr;
+        res.body().size = 0;
+        res.body().more = false;
+        co_await boost::beast::http::async_write(socket_, serializer, boost::asio::use_awaitable);
+        COMMON_SHUTDOWN_SSL
+    }
+
     auto Connection::errorReply(boost::beast::http::status status, std::string_view msg,
                                 Config& config) -> boost::asio::awaitable<void>
     {
-
-        boost::beast::http::response<boost::beast::http::string_body> res{status,
-                                                                          request_->version()};
-        res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
-        res.set(boost::beast::http::field::content_type, "text/html");
-        res.keep_alive(request_->keep_alive());
-        res.body() = msg;
-        std::error_code error_code;
-        ADD_CORS_HEADERS(request_, res, error_code)
-        res.prepare_payload();
-        co_await boost::beast::http::async_write(socket_, res, boost::asio::use_awaitable);
-        COMMON_SHUTDOWN_SSL
+        co_return co_await staticBodyReply(status, msg, msg.size(), "text/html", config);
     }
 
     auto Connection::fileReply(std::string_view path, Config& config)
         -> boost::asio::awaitable<void>
     {
         boost::beast::http::file_body::value_type body;
-        // std::string jpath = path_cat(doc_root, path);
         body.open(path.data(), boost::beast::file_mode::scan, error_code_);
         if (error_code_ == boost::beast::errc::no_such_file_or_directory)
         {
@@ -85,32 +121,13 @@ namespace netdisk::core::http
     auto Connection::stringReply(std::string_view msg, Config& config)
         -> boost::asio::awaitable<void>
     {
-        boost::beast::http::response<boost::beast::http::string_body> res{
-            boost::beast::http::status::ok, request_->version()};
-        res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
-        res.set(boost::beast::http::field::content_type, "text/html");
-        res.keep_alive(request_->keep_alive());
-        res.body() = msg;
-        res.prepare_payload();
-        std::error_code error_code;
-        ADD_CORS_HEADERS(request_, res, error_code)
-        co_await boost::beast::http::async_write(socket_, res, boost::asio::use_awaitable);
-        // std::println("wrote");
-        COMMON_SHUTDOWN_SSL
-        // std::println("shutdown");
+        co_return co_await staticBodyReply(boost::beast::http::status::ok, msg, msg.size(),
+                                           "text/html", config);
     }
 
     auto Connection::optionsReply(Config& config) -> boost::asio::awaitable<void>
     {
-        boost::beast::http::response<boost::beast::http::string_body> res{
-            boost::beast::http::status::no_content, request_->version()};
-        res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
-        res.set(boost::beast::http::field::content_type, "text/html");
-        res.keep_alive(request_->keep_alive());
-        res.prepare_payload();
-        std::error_code error_code;
-        ADD_CORS_HEADERS(request_, res, error_code)
-        co_await boost::beast::http::async_write(socket_, res, boost::asio::use_awaitable);
-        COMMON_SHUTDOWN_SSL
+        co_return co_await staticBodyReply(boost::beast::http::status::no_content, "", 0,
+                                           "text/html", config);
     }
 } // namespace netdisk::core::http

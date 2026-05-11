@@ -34,6 +34,8 @@ namespace netdisk::core::http
             auto initSSL() -> void;
             auto addRequestHandler(std::string_view pattern, RequestHandler&& handler) -> void;
             auto addResponseHandler(std::string_view pattern, ResponseHandler&& handler) -> void;
+            auto addStaticFileRequestHandler(std::string_view pattern, RequestHandler&& handler) -> void;
+            auto addStaticFileResponseHandler(std::string_view pattern, ResponseHandler&& handler) -> void;
             auto setLogger(std::shared_ptr<spdlog::logger> logger) -> void;
             auto run() -> void;
 
@@ -41,6 +43,8 @@ namespace netdisk::core::http
             Config config_;
             boost::urls::router<RequestHandler> request_router_;
             boost::urls::router<ResponseHandler> response_router_;
+            boost::urls::router<RequestHandler> static_file_request_router_;
+            boost::urls::router<ResponseHandler> static_file_response_router_;
             boost::asio::ssl::context ssl_context_;
             boost::asio::io_context io_context_;
             boost::system::error_code error_code_;
@@ -53,6 +57,11 @@ namespace netdisk::core::http
                 boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
                 boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
                 boost::beast::flat_buffer& buffer) -> boost::asio::awaitable<Request>;
+            auto handleStaticFileRequest(
+                boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
+                boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
+                boost::beast::flat_buffer& buffer) -> boost::asio::awaitable<Request>;
             auto handleResponse(Connection connection) -> boost::asio::awaitable<void>;
+            auto handleStaticFileResponse(Connection connection) -> boost::asio::awaitable<void>;
     };
 } // namespace netdisk::core::http

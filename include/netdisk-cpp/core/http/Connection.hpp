@@ -28,6 +28,10 @@ namespace netdisk::core::http
             auto errorReply(boost::beast::http::status status, std::string_view msg, Config& config)
                 -> boost::asio::awaitable<void>;
 
+            auto staticBodyReply(boost::beast::http::status status, std::string_view msg, std::size_t msg_size,
+                                 std::string_view mime_type, Config& config)
+                -> boost::asio::awaitable<void>;
+
             auto optionsReply(Config& config) -> boost::asio::awaitable<void>;
 
             template <typename Req> void setRequest(Req& req)

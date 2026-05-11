@@ -37,6 +37,18 @@ namespace netdisk::core::http
         response_router_.insert(pattern, std::move(handler));
     }
 
+    auto Server::addStaticFileRequestHandler(std::string_view pattern, RequestHandler&& handler)
+        -> void
+    {
+        static_file_request_router_.insert(pattern, std::move(handler));
+    }
+
+    auto Server::addStaticFileResponseHandler(std::string_view pattern, ResponseHandler&& handler)
+        -> void
+    {
+        static_file_response_router_.insert(pattern, std::move(handler));
+    }
+
     auto Server::setLogger(std::shared_ptr<spdlog::logger> logger) -> void
     {
         this->logger_ = std::move(logger);
@@ -91,28 +103,29 @@ namespace netdisk::core::http
             }
             catch (const boost::system::system_error& e)
             {
-                logger_->warn("An error occurred while SSL handshake: {}\n{}", e.what(),
-                              boost::stacktrace::stacktrace());
+                SPDLOG_LOGGER_WARN(logger_, "An error occurred while SSL handshake: {}\n{}",
+                                   e.what(), boost::stacktrace::stacktrace());
             }
 
-            boost::asio::co_spawn(
-                executor, doSession(std::move(ssl_stream)),
-                [&](std::exception_ptr e)
-                {
-                    if (e)
-                    {
-                        try
-                        {
-                            std::rethrow_exception(e);
-                        }
-                        catch (std::exception const& e)
-                        {
-                            // 为何注释掉logging就不会崩溃？？？
-                            // logger_->error("An error occoured in session: {}\nStacktrace: \n{}",
-                            //                e.what(), boost::stacktrace::stacktrace());
-                        }
-                    }
-                });
+            boost::asio::co_spawn(executor, doSession(std::move(ssl_stream)),
+                                  [&](std::exception_ptr e)
+                                  {
+                                      if (e)
+                                      {
+                                          try
+                                          {
+                                              std::rethrow_exception(e);
+                                          }
+                                          catch (std::exception const& e)
+                                          {
+                                              // 为何注释掉logging就不会崩溃？？？
+                                              // logger_->error("An error occoured in session:
+                                              // {}\nStacktrace: \n{}",
+                                              //                e.what(),
+                                              //                boost::stacktrace::stacktrace());
+                                          }
+                                      }
+                                  });
         }
     }
 
@@ -167,6 +180,22 @@ namespace netdisk::core::http
         {
             co_return co_await (*handler)(parser, stream, buffer, url_match);
         }
+        // If there's no suitable handler, try finding suitable static-file handler
+        co_return co_await handleStaticFileRequest(parser, stream, buffer);
+    }
+
+    auto Server::handleStaticFileRequest(
+        boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
+        boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
+        boost::beast::flat_buffer& buffer) -> boost::asio::awaitable<Request>
+    {
+        auto& request_headers = parser.get();
+        const auto target = request_headers.target();
+        boost::urls::matches url_match;
+        if (const auto* handler = static_file_request_router_.find(target, url_match))
+        {
+            co_return co_await (*handler)(parser, stream, buffer, url_match);
+        }
         // Do nothing if there's no suitable handler
         co_return pro::make_proxy<proxy::Request>(std::move(parser.get()));
     }
@@ -175,22 +204,20 @@ namespace netdisk::core::http
     {
         const auto target = connection.getRequestProxy()->target();
         boost::urls::matches url_match;
+        if (connection.getRequestProxy()->method() == boost::beast::http::verb::options)
+        {
+            co_return co_await connection.optionsReply(config_);
+        }
         if (const auto* handler = response_router_.find(target, url_match))
         {
-            co_await (*handler)(connection, url_match, config_);
+            co_return co_await (*handler)(connection, url_match, config_);
         }
-        else
+        if (const auto* handler = static_file_response_router_.find(target, url_match))
         {
-            if (connection.getRequestProxy()->method() == boost::beast::http::verb::options)
-            {
-                co_await connection.optionsReply(config_);
-            }
-            else
-            {
-                logger_->info("HTTP 404 (Not Found): {}", target);
-                co_await connection.errorReply(boost::beast::http::status::not_found,
-                                               "No such page", config_);
-            }
+            co_return co_await (*handler)(connection, url_match, config_);
         }
+        logger_->info("HTTP 404 (Not Found): {}", target);
+        co_return co_await connection.errorReply(boost::beast::http::status::not_found,
+                                                 "No such page", config_);
     }
 } // namespace netdisk::core::http
