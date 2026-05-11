@@ -31,7 +31,8 @@ string(REGEX REPLACE "/include.*$" "" Boost_ROOT ${Boost_INCLUDE_DIRS})
 set(Boost_LIBRARY_DIR "${Boost_ROOT}/lib" CACHE PATH "${Boost_ROOT}/lib")
 
 add_library(NetdiskUtils STATIC ssl/SSL.cpp url/MatchesImpl.cpp url/RouterImpl.cpp log/Logger.cpp
-    exception/SignalHandler.cpp)
+    exception/SignalHandler.cpp
+    log/RelativePathFormatter.cpp)
 add_library(Netdisk::Utils ALIAS NetdiskUtils)
 target_include_directories(NetdiskUtils PUBLIC ${Boost_INCLUDE_DIRS})
 target_include_directories(NetdiskUtils PUBLIC ${CMAKE_SOURCE_DIR}/include)
@@ -42,7 +43,9 @@ target_link_libraries(NetdiskUtils PUBLIC Netdisk::EmbedData)
 target_link_libraries(NetdiskUtils PUBLIC Netdisk::MimeTypes)
 target_compile_definitions(NetdiskUtils PUBLIC SPDLOG_USE_STD_FORMAT)
 target_compile_definitions(NetdiskUtils PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
-if (MSVC)
+target_compile_definitions(NetdiskUtils PRIVATE NETDISK_BASE_DIR="${CMAKE_SOURCE_DIR}")
+
+if(MSVC)
     target_compile_definitions(NetdiskUtils PUBLIC BOOST_STACKTRACE_USE_WINDBG_CACHED)
     target_link_libraries(NetdiskUtils PUBLIC dbgeng)
 endif()

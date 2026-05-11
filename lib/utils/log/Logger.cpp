@@ -1,4 +1,5 @@
 #include "netdisk-cpp/utils/log/Logger.hpp"
+#include "netdisk-cpp/utils/log/RelativePathFormatter.hpp"
 
 #include <spdlog/async.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -26,7 +27,8 @@ namespace netdisk::utils::log
 
     void Logger::init()
     {
-        spdlog::set_pattern("[%H:%M:%S] [%l] [%s (%#)] %v");
+        auto formatter = std::make_unique<spdlog::pattern_formatter>();
+        formatter->add_flag<RelativePathFormatter>('r').set_pattern("[%H:%M:%S] [%l] [%r(%#)] %v");
         spdlog::init_thread_pool(8192, 3);
         async_file_sink_ =
             spdlog::basic_logger_mt<spdlog::async_factory>("async_file_logger", log_path_)
@@ -36,6 +38,7 @@ namespace netdisk::utils::log
         console_sink_->set_level(console_log_level_);
         logger_ = std::make_shared<spdlog::logger>(
             "multi_logger", spdlog::sinks_init_list{async_file_sink_, console_sink_});
+        logger_->set_formatter(std::move(formatter));
         spdlog::register_logger(logger_);
     }
 } // namespace netdisk::utils::log
