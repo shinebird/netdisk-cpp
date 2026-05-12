@@ -1,12 +1,13 @@
 #include "netdisk-cpp/core/http/Server.hpp"
-#include "boost/asio/awaitable.hpp"
 #include "netdisk-cpp/core/http/Connection.hpp"
 #include "netdisk-cpp/utils/log/Logger.hpp"
 #include "netdisk-cpp/utils/log/formatter/boost/stacktrace/stacktrace.hpp"
 #include "netdisk-cpp/utils/ssl/SSL.hpp"
 #include "netdisk-cpp/utils/url/Matches.hpp"
 
+#include <boost/asio/awaitable.hpp>
 #include <boost/asio/co_spawn.hpp>
+#include <boost/asio/detached.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/core/tcp_stream.hpp>
@@ -106,26 +107,16 @@ namespace netdisk::core::http
                 SPDLOG_LOGGER_WARN(logger_, "An error occurred while SSL handshake: {}\n{}",
                                    e.what(), boost::stacktrace::stacktrace());
             }
-
-            boost::asio::co_spawn(executor, doSession(std::move(ssl_stream)),
-                                  [&](std::exception_ptr e)
-                                  {
-                                      if (e)
-                                      {
-                                          try
-                                          {
-                                              std::rethrow_exception(e);
-                                          }
-                                          catch (std::exception const& e)
-                                          {
-                                              // 为何注释掉logging就不会崩溃？？？
-                                              // logger_->error("An error occoured in session:
-                                              // {}\nStacktrace: \n{}",
-                                              //                e.what(),
-                                              //                boost::stacktrace::stacktrace());
-                                          }
-                                      }
-                                  });
+            try
+            {
+                boost::asio::co_spawn(executor, doSession(std::move(ssl_stream)),
+                                      boost::asio::detached);
+            }
+            catch (std::exception const& e)
+            {
+                SPDLOG_LOGGER_ERROR(logger_, "An error occoured in session: {}\nStacktrace: \n{}",
+                                    e.what(), boost::stacktrace::stacktrace());
+            }
         }
     }
 
