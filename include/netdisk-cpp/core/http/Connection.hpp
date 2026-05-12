@@ -34,6 +34,8 @@ namespace netdisk::core::http
 
             auto optionsReply(Config& config) -> boost::asio::awaitable<void>;
 
+            auto redirectReply(std::string_view new_target, Config& config) -> boost::asio::awaitable<void>;
+
             template <typename Req> void setRequest(Req& req)
             {
                 request_ = pro::make_proxy_view<Request>(req);

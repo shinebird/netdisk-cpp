@@ -10,7 +10,7 @@ namespace netdisk::core::http::controller
 {
     namespace request
     {
-        NETDISK_CONTROLLER_REQUEST(test);
+        NETDISK_CONTROLLER_REQUEST(mainPage);
         NETDISK_CONTROLLER_REQUEST(indexPage);
         NETDISK_CONTROLLER_REQUEST(login);
         NETDISK_CONTROLLER_REQUEST(filePanel);
@@ -19,7 +19,7 @@ namespace netdisk::core::http::controller
     } // namespace request
     namespace response
     {
-        NETDISK_CONTROLLER_RESPONSE(test);
+        NETDISK_CONTROLLER_RESPONSE(mainPage);
         NETDISK_CONTROLLER_RESPONSE(indexPage);
         NETDISK_CONTROLLER_RESPONSE(login);
         NETDISK_CONTROLLER_RESPONSE(filePanel);

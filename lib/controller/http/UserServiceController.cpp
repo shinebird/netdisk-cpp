@@ -14,7 +14,7 @@ namespace netdisk::core::http::controller
 {
     namespace request
     {
-        NETDISK_CONTROLLER_REQUEST(test)
+        NETDISK_CONTROLLER_REQUEST(mainPage)
         {
             co_return co_await internal::defaultHandler<boost::beast::http::dynamic_body, true>(
                 parser, stream, buffer);
@@ -70,9 +70,9 @@ namespace netdisk::core::http::controller
             } // namespace
         } // namespace internal
 
-        NETDISK_CONTROLLER_RESPONSE(test)
+        NETDISK_CONTROLLER_RESPONSE(mainPage)
         {
-            co_await connection.stringReply("Hello world!", config);
+            co_await connection.redirectReply("/user/index", config);
         }
 
         NETDISK_CONTROLLER_RESPONSE(indexPage)

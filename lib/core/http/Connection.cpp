@@ -6,6 +6,7 @@
 #include <boost/asio/use_awaitable.hpp>
 #include <boost/beast/http/dynamic_body_fwd.hpp>
 #include <boost/beast/http/error.hpp>
+#include <boost/beast/http/field.hpp>
 #include <boost/beast/http/fields_fwd.hpp>
 #include <boost/beast/http/impl/write.hpp>
 #include <boost/beast/version.hpp>
@@ -129,5 +130,21 @@ namespace netdisk::core::http
     {
         co_return co_await staticBodyReply(boost::beast::http::status::no_content, "", 0,
                                            "text/html", config);
+    }
+
+    auto Connection::redirectReply(std::string_view new_target, Config& config)
+        -> boost::asio::awaitable<void>
+    {
+        boost::beast::http::response<boost::beast::http::string_body> res{
+            boost::beast::http::status::moved_permanently, request_->version()};
+        const auto host = request_->at(boost::beast::http::field::host);
+        res.set(boost::beast::http::field::location, std::format("https://{}{}", host, new_target));
+        res.body() = "";
+        res.prepare_payload();
+        res.keep_alive(request_->keep_alive());
+        std::error_code error_code;
+        ADD_CORS_HEADERS(request_, res, error_code)
+        co_await boost::beast::http::async_write(socket_, res, boost::asio::use_awaitable);
+        COMMON_SHUTDOWN_SSL
     }
 } // namespace netdisk::core::http

@@ -11,6 +11,7 @@ PRO_DEF_MEM_DISPATCH(MemHttpRequestKeepAlive, keep_alive);
 PRO_DEF_MEM_DISPATCH(MemHttpRequestTarget, target);
 PRO_DEF_MEM_DISPATCH(MemHttpRequestMethod, method);
 PRO_DEF_MEM_DISPATCH(MemHttpRequestSwap, swap);
+PRO_DEF_MEM_DISPATCH(MemHttpRequestAt, at);
 PRO_DEF_MEM_DISPATCH(MemHttpRequestParserGet, get);
 
 namespace netdisk::core::http
@@ -24,7 +25,11 @@ namespace netdisk::core::http
                       MemHttpRequestTarget, boost::core::string_view()>::
                       add_convention<MemHttpRequestMethod, boost::beast::http::verb()>::
                           add_convention<MemHttpRequestSwap, void(boost::beast::http::fields&)>::
-                              support_copy<pro::constraint_level::nontrivial>::build
+                              add_convention<
+                                  MemHttpRequestAt,
+                                  const boost::core::string_view(boost::beast::http::field) const,
+                                  const boost::core::string_view(boost::core::string_view)
+                                      const>::support_copy<pro::constraint_level::nontrivial>::build
         {
         };
 
