@@ -9,6 +9,16 @@ namespace netdisk::core::http::controller
     {
         server.addRequestHandler("/test", request::test);
         server.addResponseHandler("/test", response::test);
+        server.addRequestHandler("/user/index", request::indexPage);
+        server.addResponseHandler("/user/index", response::indexPage);
+        server.addRequestHandler("/user/login", request::login);
+        server.addResponseHandler("/user/login", response::login);
+        server.addRequestHandler("/user/files", request::filePanel);
+        server.addResponseHandler("/user/files", response::filePanel);
+        server.addRequestHandler("/user/downloadAndExtract", request::downloadAndExtract);
+        server.addResponseHandler("/user/downloadAndExtract", response::downloadAndExtract);
+        server.addRequestHandler("/user/batchUploadFiles", request::batchUploadFiles);
+        server.addResponseHandler("/user/batchUploadFiles", response::batchUploadFiles);
         server.addStaticFileRequestHandler("/user/{path+}", request::staticFile);
         server.addStaticFileResponseHandler("/user/{path+}", response::staticFile);
     }

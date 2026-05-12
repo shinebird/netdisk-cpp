@@ -20,10 +20,7 @@ namespace netdisk::core::http::controller
 {
     namespace request
     {
-        auto staticFile(boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
-                        boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
-                        boost::beast::flat_buffer& buffer, const boost::urls::matches& match)
-            -> boost::asio::awaitable<Request>
+        NETDISK_CONTROLLER_REQUEST(staticFile)
         {
             co_return co_await internal::defaultHandler<boost::beast::http::dynamic_body, true>(
                 parser, stream, buffer);
@@ -31,8 +28,7 @@ namespace netdisk::core::http::controller
     } // namespace request
     namespace response
     {
-        auto staticFile(Connection& connection, const boost::urls::matches& match, Config& config)
-            -> boost::asio::awaitable<void>
+        NETDISK_CONTROLLER_RESPONSE(staticFile)
         {
             static const std::string prefix = "/user/";
             boost::urls::pct_string_view original_target(match.at("path"));
