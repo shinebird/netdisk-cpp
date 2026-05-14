@@ -3,9 +3,9 @@
 #include "netdisk-cpp/controller/http/UserServiceController.hpp"
 #include "netdisk-cpp/core/http/Server.hpp"
 
-namespace netdisk::core::http::controller
+namespace netdisk::controller::http
 {
-    void registerAll(Server& server)
+    void registerAll(::netdisk::core::http::Server& server)
     {
         server.addRequestHandler("/", request::mainPage);
         server.addResponseHandler("/", response::mainPage);
@@ -23,4 +23,4 @@ namespace netdisk::core::http::controller
         server.addStaticFileRequestHandler("/user/{path+}", request::staticFile);
         server.addStaticFileResponseHandler("/user/{path+}", response::staticFile);
     }
-} // namespace netdisk::core::http::controller
+} // namespace netdisk::controller::http

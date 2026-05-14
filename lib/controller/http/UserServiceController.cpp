@@ -10,7 +10,7 @@
 
 #include <filesystem>
 
-namespace netdisk::core::http::controller
+namespace netdisk::controller::http
 {
     namespace request
     {
@@ -56,8 +56,8 @@ namespace netdisk::core::http::controller
         {
             namespace
             {
-                auto staticPage(Connection& connection, const std::string_view target,
-                                Config& config) -> boost::asio::awaitable<void>
+                auto staticPage(core::http::Connection& connection, const std::string_view target,
+                                core::http::Config& config) -> boost::asio::awaitable<void>
                 {
                     const auto embed_data = data::getEmbedData(target);
                     const auto mime_type = *(utils::mime_type::getMimeTypes(
@@ -100,4 +100,4 @@ namespace netdisk::core::http::controller
             co_await internal::staticPage(connection, "/user/batchUploadFiles.html", config);
         }
     } // namespace response
-} // namespace netdisk::core::http::controller
+} // namespace netdisk::controller::http

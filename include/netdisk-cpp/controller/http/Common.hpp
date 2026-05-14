@@ -7,7 +7,7 @@
 
 #include "netdisk-cpp/core/http/Request.hpp"
 
-namespace netdisk::core::http::controller
+namespace netdisk::controller::http
 {
     namespace request
     {
@@ -17,14 +17,15 @@ namespace netdisk::core::http::controller
             static auto defaultHandler(
                 boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
                 boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
-                boost::beast::flat_buffer& buffer) -> boost::asio::awaitable<Request>
+                boost::beast::flat_buffer& buffer) -> boost::asio::awaitable<core::http::Request>
             {
                 if constexpr (!DiscardBody)
                 {
                     boost::beast::http::request_parser<Body> new_parser{std::move(parser)};
                     co_await boost::beast::http::async_read(stream, buffer, new_parser,
                                                             boost::asio::use_awaitable);
-                    co_return pro::make_proxy<proxy::Request>(std::move(new_parser.get()));
+                    co_return pro::make_proxy<core::http::proxy::Request>(
+                        std::move(new_parser.get()));
                 }
                 else
                 {
@@ -35,10 +36,11 @@ namespace netdisk::core::http::controller
                         co_await boost::beast::http::async_read_some(stream, buffer, new_parser,
                                                                      boost::asio::use_awaitable);
                     }
-                    co_return pro::make_proxy<proxy::Request>(std::move(new_parser.get()));
+                    co_return pro::make_proxy<core::http::proxy::Request>(
+                        std::move(new_parser.get()));
                 }
             }
         } // namespace internal
     } // namespace request
 
-} // namespace netdisk::core::http::controller
+} // namespace netdisk::controller::http

@@ -6,7 +6,7 @@
 #include "netdisk-cpp/core/http/Request.hpp"
 #include "netdisk-cpp/utils/url/Matches.hpp"
 
-namespace netdisk::core::http::controller
+namespace netdisk::controller::http
 {
     namespace request
     {
@@ -17,4 +17,4 @@ namespace netdisk::core::http::controller
     {
         NETDISK_CONTROLLER_RESPONSE(staticFile);
     }
-} // namespace netdisk::core::http::controller;=
+} // namespace netdisk::controller::http

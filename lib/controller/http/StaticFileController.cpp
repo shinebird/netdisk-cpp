@@ -15,7 +15,7 @@
 
 #include <spdlog/spdlog.h>
 
-namespace netdisk::core::http::controller
+namespace netdisk::controller::http
 {
     namespace request
     {
@@ -57,4 +57,4 @@ namespace netdisk::core::http::controller
                                                      config);
         }
     } // namespace response
-} // namespace netdisk::core::http::controller
+} // namespace netdisk::controller::http

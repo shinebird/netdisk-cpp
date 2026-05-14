@@ -94,7 +94,7 @@ auto main(int argc, char* argv[]) -> int
     logger.init();
     server.setLogger(logger.getLogger());
 
-    netdisk::core::http::controller::registerAll(server);
+    netdisk::controller::http::registerAll(server);
 
     server.initSSL();
     server.run();

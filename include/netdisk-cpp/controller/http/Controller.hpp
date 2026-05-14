@@ -3,8 +3,9 @@
 namespace netdisk::core::http
 {
     class Server;
-    namespace controller
-    {
-        void registerAll(Server& server);
-    }
-} // namespace netdisk::core::http
+}
+
+namespace netdisk::controller::http
+{
+    void registerAll(::netdisk::core::http::Server& server);
+}

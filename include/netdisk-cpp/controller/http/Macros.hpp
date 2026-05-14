@@ -4,8 +4,8 @@
     auto name(boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,          \
               boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,                          \
               boost::beast::flat_buffer& buffer, const boost::urls::matches& match)                \
-        -> boost::asio::awaitable<Request>
+        -> boost::asio::awaitable<::netdisk::core::http::Request>
 
 #define NETDISK_CONTROLLER_RESPONSE(name)                                                          \
-    auto name(Connection& connection, const boost::urls::matches& match, Config& config)           \
-        -> boost::asio::awaitable<void>
+    auto name(::netdisk::core::http::Connection& connection, const boost::urls::matches& match,    \
+              ::netdisk::core::http::Config& config) -> boost::asio::awaitable<void>
