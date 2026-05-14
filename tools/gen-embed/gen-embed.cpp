@@ -9,6 +9,8 @@
 #include <string>
 #include <string_view>
 
+#include <boost/hash2/sha3.hpp>
+#include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/program_options.hpp>
 
 #include "gen-embed.hpp"
@@ -75,6 +77,7 @@ auto main(int argc, char* argv[]) -> int
             (embed_data_cpp_fs_path.stem().generic_u8string() + std::u8string(u8".hpp")).data()));
     std::uint64_t index = 0;
     std::list<std::string> embed_data_paths;
+    std::vector<std::string> data_sha3_512s;
     std::set<uint64_t> empty_file_indices;
     for (const auto& entry : std::filesystem::recursive_directory_iterator(path_to_folder))
     {
@@ -85,6 +88,13 @@ auto main(int argc, char* argv[]) -> int
             std::println(embed_data_cpp_stream, embed_line_format, index,
                          std::bit_cast<char* const>(
                              std::filesystem::absolute(entry.path()).generic_u8string().data()));
+            boost::iostreams::mapped_file_source input_buffer(entry.path().string());
+            input_buffer.close();
+            input_buffer.open(entry.path().string());
+            boost::hash2::sha3_512 hash_gen;
+            hash_gen.update(input_buffer.data(), entry.file_size());
+            data_sha3_512s.emplace_back(boost::hash2::to_string(hash_gen.result()));
+            input_buffer.close();
             if (entry.file_size() == 0) [[unlikely]]
             {
                 empty_file_indices.emplace(index);
@@ -93,9 +103,9 @@ auto main(int argc, char* argv[]) -> int
         }
     }
     /// due to missing __cpp_lib_constexpr_map or __cpp_lib_constexpr_flat_map
-    std::println(
-        embed_data_cpp_stream,
-        "    static const std::flat_map<std::string_view, std::span<const char>> embed_data = {{");
+    std::println(embed_data_cpp_stream,
+                 "    static const std::flat_map<std::string_view, std::pair<std::span<const "
+                 "char>, std::string_view>> embed_data = {{");
     index = 0;
     for (const auto& entry : embed_data_paths)
     {
@@ -105,18 +115,19 @@ auto main(int argc, char* argv[]) -> int
         }
         else
         {
-            std::println(embed_data_cpp_stream, "        {{ R\"({})\", EMBED_SOURCE_{} }},", entry,
-                         index);
+            std::println(embed_data_cpp_stream,
+                         "        {{ R\"({})\", {{ EMBED_SOURCE_{}, \"{}\" }} }},", entry, index,
+                         data_sha3_512s[index]);
         }
 
         index++;
     }
     std::println(embed_data_cpp_stream, "    }};\n");
-    std::println(embed_data_cpp_stream,
-                 "    auto getEmbedData(const std::string_view path) -> std::span<const char>\n"
-                 "    {{\n"
-                 "        return embed_data.at(path);\n"
-                 "    }}");
+    std::println(embed_data_cpp_stream, "    auto getEmbedData(const std::string_view path) -> "
+                                        "std::pair<std::span<const char>, std::string_view>\n"
+                                        "    {{\n"
+                                        "        return embed_data.at(path);\n"
+                                        "    }}");
     std::println(embed_data_cpp_stream, "}}");
 
     std::println(embed_data_h_stream, embed_h_content,

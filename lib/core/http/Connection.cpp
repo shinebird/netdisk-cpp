@@ -43,13 +43,18 @@ namespace netdisk::core::http
 
     auto Connection::staticBodyReply(boost::beast::http::status status, std::string_view msg,
                                      std::size_t msg_size, std::string_view mime_type,
-                                     Config& config) -> boost::asio::awaitable<void>
+                                     Config& config, const boost::beast::http::fields& extra_fields)
+        -> boost::asio::awaitable<void>
     {
         boost::beast::http::response<boost::beast::http::buffer_body> res{status,
                                                                           request_->version()};
         res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
         res.set(boost::beast::http::field::content_type, mime_type);
         res.keep_alive(request_->keep_alive());
+        for (const auto& item : extra_fields)
+        {
+            res.insert(item.name(), item.value());
+        }
         std::error_code error_code;
         ADD_CORS_HEADERS(request_, res, error_code)
         res.content_length(msg_size);
@@ -83,6 +88,22 @@ namespace netdisk::core::http
         res.body().more = false;
         co_await boost::beast::http::async_write(socket_, serializer, boost::asio::use_awaitable);
         COMMON_SHUTDOWN_SSL
+    }
+
+    auto Connection::staticBodyReplyWithETag(boost::beast::http::status status,
+                                             std::string_view msg, std::size_t msg_size,
+                                             std::string_view mime_type, std::string_view e_tag,
+                                             Config& config) -> boost::asio::awaitable<void>
+    {
+        boost::beast::http::fields extra_fields;
+        extra_fields.set(boost::beast::http::field::etag, e_tag);
+        const auto if_none_match = request_->operator[](boost::beast::http::field::if_none_match);
+        if (e_tag == if_none_match)
+        {
+            co_return co_await staticBodyReply(boost::beast::http::status::not_modified, "", 0,
+                                               "text/html", config, extra_fields);
+        }
+        co_return co_await staticBodyReply(status, msg, msg_size, mime_type, config, extra_fields);
     }
 
     auto Connection::errorReply(boost::beast::http::status status, std::string_view msg,

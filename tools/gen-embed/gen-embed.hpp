@@ -18,5 +18,5 @@ constexpr std::string_view embed_h_content =
     "#include <string_view>\n\n"
     "namespace netdisk::data\n"
     "{{\n"
-    "    auto getEmbedData(const std::string_view path) -> std::span<const char>;\n"
+    "    auto getEmbedData(const std::string_view path) -> std::pair<std::span<const char>, std::string_view>;\n"
     "}}";

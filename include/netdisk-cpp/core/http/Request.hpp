@@ -29,7 +29,12 @@ namespace netdisk::core::http
                                   MemHttpRequestAt,
                                   const boost::core::string_view(boost::beast::http::field) const,
                                   const boost::core::string_view(boost::core::string_view)
-                                      const>::support_copy<pro::constraint_level::nontrivial>::build
+                                      const>::add_convention<pro::operator_dispatch<"[]", false>,
+                                                             const boost::core::string_view(
+                                                                 boost::core::string_view),
+                                                             const boost::core::string_view(
+                                                                 boost::beast::http::field)>::
+                                  support_copy<pro::constraint_level::nontrivial>::build
         {
         };
 

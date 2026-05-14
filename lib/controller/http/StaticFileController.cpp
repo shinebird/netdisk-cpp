@@ -10,7 +10,6 @@
 #include <boost/stacktrace/stacktrace.hpp>
 #include <boost/url/pct_string_view.hpp>
 
-
 #include <exception>
 #include <filesystem>
 
@@ -41,11 +40,11 @@ namespace netdisk::core::http::controller
                 const auto mime_type = *(utils::mime_type::getMimeTypes(
                                              std::filesystem::path{target}.extension().string())
                                              .begin());
-                co_return co_await connection.staticBodyReply(boost::beast::http::status::ok,
-                                                              embed_data.data(), embed_data.size(),
-                                                              mime_type, config);
+                co_return co_await connection.staticBodyReplyWithETag(
+                    boost::beast::http::status::ok, embed_data.first.data(),
+                    embed_data.first.size(), mime_type, embed_data.second, config);
             }
-            catch (std::exception& e)
+            catch (const std::exception& e)
             {
                 boost::stacktrace::stacktrace trace;
                 SPDLOG_LOGGER_INFO(spdlog::get("multi_logger"), R"(Unable to find static-file {})",
