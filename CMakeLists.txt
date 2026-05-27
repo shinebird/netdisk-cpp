@@ -6,6 +6,7 @@ project("netdisk-cpp" LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_C_STANDARD 23)
 
+set(NETDISK_REPOSITORY_DATABASE "SQLITE")
 add_subdirectory(lib)
 add_subdirectory(tools)
 

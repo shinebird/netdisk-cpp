@@ -1,12 +1,16 @@
 #include "netdisk-cpp/controller/http/Controller.hpp"
 #include "netdisk-cpp/controller/http/StaticFileController.hpp"
 #include "netdisk-cpp/controller/http/UserServiceController.hpp"
+#include "netdisk-cpp/controller/http/security/LoginController.hpp"
 #include "netdisk-cpp/core/http/Server.hpp"
 
 namespace netdisk::controller::http
 {
     void registerAll(::netdisk::core::http::Server& server)
     {
+        server.addRequestHandler("/login", security::request::login);
+        server.addResponseHandler("/login", security::response::login);
+
         server.addRequestHandler("/", request::mainPage);
         server.addResponseHandler("/", response::mainPage);
         server.addRequestHandler("/user/index", request::indexPage);

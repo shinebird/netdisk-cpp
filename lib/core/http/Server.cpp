@@ -18,9 +18,19 @@
 
 namespace netdisk::core::http
 {
-    Server::Server(std::uint16_t port, std::uint64_t num_threads)
-        : config_(port, num_threads), ssl_context_(boost::asio::ssl::context::tlsv13),
-          io_context_(num_threads)
+    Server::Server(std::uint16_t port, std::uint64_t num_threads,
+#ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
+
+                   repository::database::sqlite::Connection* database_connection,
+#endif
+                   controller::security::UserAuthenticator* user_authenticator_)
+        : config_(port, num_threads,
+#ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
+
+                  database_connection,
+#endif
+                  user_authenticator_),
+          ssl_context_(boost::asio::ssl::context::tlsv13), io_context_(num_threads)
     {
     }
 
@@ -130,28 +140,23 @@ namespace netdisk::core::http
         {
             // Set the timeout.
             stream.next_layer().expires_after(std::chrono::seconds(30));
-
-            // Read a request
-            // boost::beast::http::request<boost::beast::http::string_body> request;
-            // co_await boost::beast::http::async_read(stream, buffer, request);
+            auto connection_id = current_connection_id_.fetch_add(1);
+            std::any connection_extra_data;
             boost::beast::http::request_parser<boost::beast::http::empty_body> header_parser;
             co_await boost::beast::http::async_read_header(stream, buffer, header_parser,
                                                            boost::asio::use_awaitable);
-            auto request = co_await handleRequest(header_parser, stream, buffer);
+            const auto keep_alive = header_parser.keep_alive();
+            auto request = co_await handleRequest(header_parser, stream, buffer, connection_id,
+                                                  connection_extra_data);
             Connection connection(stream);
             connection.setRequestProxy(std::move(request));
-            co_await handleResponse(std::move(connection));
-            // std::println("doSession loop finish");
-
-            // Handle the request
-            // boost::beast::http::message_generator msg = handle_request(*doc_root,
-            // std::move(request));
-
-            // Determine if we should close the connection
-            // bool keep_alive = msg.keep_alive();
-
-            // Send the response
-            // co_await boost::beast::async_write(stream, std::move(msg));
+            co_await handleResponse(std::move(connection), connection_id, connection_extra_data);
+            if (!keep_alive)
+            {
+                // This means we should close the connection, usually because
+                // the response indicated the "Connection: close" semantic.
+                break;
+            }
         }
 
         // At this point the connection is closed gracefully
@@ -162,36 +167,42 @@ namespace netdisk::core::http
     auto Server::handleRequest(
         boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
         boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
-        boost::beast::flat_buffer& buffer) -> boost::asio::awaitable<Request>
+        boost::beast::flat_buffer& buffer, std::uint64_t connection_id, std::any& extra_data)
+        -> boost::asio::awaitable<Request>
     {
         auto& request_headers = parser.get();
         const auto target = request_headers.target();
         boost::urls::matches url_match;
         if (const auto* handler = request_router_.find(target, url_match))
         {
-            co_return co_await (*handler)(parser, stream, buffer, url_match);
+            co_return co_await (*handler)(parser, stream, buffer, url_match, config_, connection_id,
+                                          extra_data);
         }
         // If there's no suitable handler, try finding suitable static-file handler
-        co_return co_await handleStaticFileRequest(parser, stream, buffer);
+        co_return co_await handleStaticFileRequest(parser, stream, buffer, connection_id,
+                                                   extra_data);
     }
 
     auto Server::handleStaticFileRequest(
         boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
         boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
-        boost::beast::flat_buffer& buffer) -> boost::asio::awaitable<Request>
+        boost::beast::flat_buffer& buffer, std::uint64_t connection_id, std::any& extra_data)
+        -> boost::asio::awaitable<Request>
     {
         auto& request_headers = parser.get();
         const auto target = request_headers.target();
         boost::urls::matches url_match;
         if (const auto* handler = static_file_request_router_.find(target, url_match))
         {
-            co_return co_await (*handler)(parser, stream, buffer, url_match);
+            co_return co_await (*handler)(parser, stream, buffer, url_match, config_, connection_id,
+                                          extra_data);
         }
         // Do nothing if there's no suitable handler
         co_return pro::make_proxy<proxy::Request>(std::move(parser.get()));
     }
 
-    auto Server::handleResponse(Connection connection) -> boost::asio::awaitable<void>
+    auto Server::handleResponse(Connection connection, std::uint64_t connection_id,
+                                std::any& extra_data) -> boost::asio::awaitable<void>
     {
         const auto target = connection.getRequestProxy()->target();
         boost::urls::matches url_match;
@@ -201,11 +212,13 @@ namespace netdisk::core::http
         }
         if (const auto* handler = response_router_.find(target, url_match))
         {
-            co_return co_await (*handler)(connection, url_match, config_);
+            co_return co_await (*handler)(connection, url_match, config_, connection_id,
+                                          extra_data);
         }
         if (const auto* handler = static_file_response_router_.find(target, url_match))
         {
-            co_return co_await (*handler)(connection, url_match, config_);
+            co_return co_await (*handler)(connection, url_match, config_, connection_id,
+                                          extra_data);
         }
         logger_->info("HTTP 404 (Not Found): {}", target);
         co_return co_await connection.errorReply(boost::beast::http::status::not_found,

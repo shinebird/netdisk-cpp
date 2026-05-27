@@ -21,6 +21,7 @@ target_link_libraries(netdisk PRIVATE Netdisk::Core)
 target_link_libraries(netdisk PRIVATE Netdisk::Controller)
 target_link_libraries(netdisk PRIVATE Netdisk::Service)
 target_link_libraries(netdisk PRIVATE Netdisk::Repository)
+target_compile_definitions(netdisk PRIVATE NETDISK_REPOSITORY_DATABASE_${NETDISK_REPOSITORY_DATABASE})
 
 install(TARGETS netdisk DESTINATION bin)
 install(FILES $<TARGET_PDB_FILE:netdisk> DESTINATION bin OPTIONAL)

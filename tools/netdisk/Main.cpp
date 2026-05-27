@@ -1,6 +1,9 @@
 #include <boost/beast/http/field.hpp>
 #include <boost/program_options.hpp>
 
+#ifdef _MSC_VER
+    #include <yvals_core.h>
+#endif
 
 #include <spdlog/common.h>
 
@@ -15,11 +18,16 @@
 
 #include "CommandLine.hpp"
 
-#include "netdisk-cpp/utils/log/Logger.hpp"
+#include "netdisk-cpp/controller/generic/security/UserAuthenticator.hpp"
 #include "netdisk-cpp/controller/http/Controller.hpp"
 #include "netdisk-cpp/core/http/Config.hpp"
 #include "netdisk-cpp/core/http/Server.hpp"
 #include "netdisk-cpp/core/http/config/CORS.hpp"
+#include "netdisk-cpp/utils/log/Logger.hpp"
+
+#ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
+    #include "netdisk-cpp/repository/sqlite/DataBaseConnection.hpp"
+#endif
 
 static void printHelpMessage(const std::string_view& program_name)
 {
@@ -46,7 +54,11 @@ auto main(int argc, char* argv[]) -> int
             ->default_value(spdlog::level::level_enum::warn, "warn")
             ->notifier([](spdlog::level::level_enum)
                        { netdisk::tools::command_line::checkCustomType("file-logger-level"); }),
-        "Log level of console-logger [trace, debug, info, warn, err, critical, off]");
+        "Log level of console-logger [trace, debug, info, warn, err, critical, off]")
+#ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
+        ("database-path", boost::program_options::value<std::string>(), "Path to sqlite database")
+#endif
+        ;
     // positional_desc.add("input", -1);
     boost::program_options::command_line_parser command_line_parser{argc, argv};
     command_line_parser.options(desc)
@@ -75,8 +87,19 @@ auto main(int argc, char* argv[]) -> int
         return 1;
     }
 
+#ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
+    netdisk::repository::database::sqlite::Connection database_connection(
+        vm.at("database-path").as<std::string>());
+#endif
+    netdisk::controller::security::UserAuthenticator user_authenticator;
+
     netdisk::core::http::Server server(vm.at("http-port").as<std::uint16_t>(),
-                                       vm.at("threads").as<std::uint64_t>());
+                                       vm.at("threads").as<std::uint64_t>(),
+#ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
+
+                                       std::addressof(database_connection),
+#endif
+                                       std::addressof(user_authenticator));
 
     netdisk::core::http::config::CORSRegistration cors_registration;
     cors_registration.setAllowHeaders(boost::beast::http::field::unknown);

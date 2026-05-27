@@ -13,7 +13,7 @@ namespace netdisk::controller::http
     {
         namespace internal
         {
-            template <typename Body, bool DiscardBody>
+            template <typename Body, bool DiscardBody = false>
             static auto defaultHandler(
                 boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
                 boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,

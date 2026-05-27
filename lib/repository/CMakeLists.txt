@@ -1,5 +1,8 @@
 add_subdirectory(generic)
-add_subdirectory(sqlite)
+
+if(NETDISK_REPOSITORY_DATABASE STREQUAL "SQLITE")
+    add_subdirectory(sqlite)
+endif()
 
 add_library(NetdiskRepository INTERFACE)
 add_library(Netdisk::Repository ALIAS NetdiskRepository)

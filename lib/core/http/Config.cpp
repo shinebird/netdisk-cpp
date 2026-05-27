@@ -2,8 +2,13 @@
 
 namespace netdisk::core::http
 {
-    Config::Config(std::uint16_t port, std::uint64_t num_threads)
-        : port_(port), num_threads_(num_threads)
+    Config::Config(std::uint16_t port, std::uint64_t num_threads,
+#ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
+                   repository::database::sqlite::Connection* database_connection,
+#endif
+                   controller::security::UserAuthenticator* user_authenticator)
+        : port_(port), num_threads_(num_threads), database_connection_(database_connection),
+          user_authenticator_(user_authenticator)
     {
     }
 
@@ -12,4 +17,18 @@ namespace netdisk::core::http
     auto Config::getPort() const -> std::uint16_t { return this->port_; }
 
     auto Config::getNumThreads() const -> std::uint64_t { return this->num_threads_; }
+
+    auto Config::getDatabaseConnection() const ->
+#ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
+        repository::database::sqlite::Connection*
+#endif
+
+    {
+        return this->database_connection_;
+    }
+
+    auto Config::getUserAuthenticator() const -> controller::security::UserAuthenticator*
+    {
+        return this->user_authenticator_;
+    }
 } // namespace netdisk::core::http
