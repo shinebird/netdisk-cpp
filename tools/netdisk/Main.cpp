@@ -1,12 +1,6 @@
 #include <boost/beast/http/field.hpp>
 #include <boost/program_options.hpp>
 
-#ifdef _MSC_VER
-    #include <yvals_core.h>
-#endif
-
-#include <spdlog/common.h>
-
 #include <cstdint>
 #include <iostream>
 #include <print>

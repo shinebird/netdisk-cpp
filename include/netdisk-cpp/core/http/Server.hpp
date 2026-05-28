@@ -6,8 +6,11 @@
 #include <boost/system/error_code.hpp>
 
 #include <any>
+#include <array>
 #include <atomic>
 #include <cstdint>
+#include <utility>
+
 
 #include "netdisk-cpp/core/http/Config.hpp"
 #include "netdisk-cpp/core/http/Connection.hpp"
@@ -38,8 +41,10 @@ namespace netdisk::core::http
             Server(Server&& other) noexcept = delete;
             [[nodiscard]] auto getConfig() -> Config&;
             auto initSSL() -> void;
-            auto addRequestHandler(std::string_view pattern, RequestHandler&& handler) -> void;
-            auto addResponseHandler(std::string_view pattern, ResponseHandler&& handler) -> void;
+            auto addRequestHandler(boost::beast::http::verb method, std::string_view pattern,
+                                   RequestHandler&& handler) -> void;
+            auto addResponseHandler(boost::beast::http::verb method, std::string_view pattern,
+                                    ResponseHandler&& handler) -> void;
             auto addStaticFileRequestHandler(std::string_view pattern, RequestHandler&& handler)
                 -> void;
             auto addStaticFileResponseHandler(std::string_view pattern, ResponseHandler&& handler)
@@ -49,8 +54,8 @@ namespace netdisk::core::http
 
         private:
             Config config_;
-            boost::urls::router<RequestHandler> request_router_;
-            boost::urls::router<ResponseHandler> response_router_;
+            std::array<std::unique_ptr<boost::urls::router<RequestHandler>>, std::to_underlying(boost::beast::http::verb::unlink) + 1> request_routers_;
+            std::array<std::unique_ptr<boost::urls::router<ResponseHandler>>, std::to_underlying(boost::beast::http::verb::unlink) + 1> response_routers_;
             boost::urls::router<RequestHandler> static_file_request_router_;
             boost::urls::router<ResponseHandler> static_file_response_router_;
             boost::asio::ssl::context ssl_context_;

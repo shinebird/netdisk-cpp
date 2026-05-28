@@ -14,6 +14,7 @@
 #include <boost/beast/http/impl/read.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
 
+#include <utility>
 #include <vector>
 
 namespace netdisk::core::http
@@ -32,20 +33,36 @@ namespace netdisk::core::http
                   user_authenticator_),
           ssl_context_(boost::asio::ssl::context::tlsv13), io_context_(num_threads)
     {
+        for (auto& item : request_routers_)
+        {
+            item = std::make_unique<boost::urls::router<RequestHandler>>();
+        }
+        for (auto& item : response_routers_)
+        {
+            item = std::make_unique<boost::urls::router<ResponseHandler>>();
+        }
     }
 
     auto Server::getConfig() -> Config& { return config_; }
 
     auto Server::initSSL() -> void { utils::ssl::configureSSLContext(ssl_context_); }
 
-    auto Server::addRequestHandler(std::string_view pattern, RequestHandler&& handler) -> void
+    auto Server::addRequestHandler(boost::beast::http::verb method, std::string_view pattern,
+                                   RequestHandler&& handler) -> void
     {
-        request_router_.insert(pattern, std::move(handler));
+        // boost::urls::router<RequestHandler> router;
+        // const auto& [iter, success] = request_routers_.try_emplace(method, std::move(router));
+        // iter->second.insert(pattern, std::move(handler));
+        request_routers_[std::to_underlying(method)]->insert(pattern, std::move(handler));
     }
 
-    auto Server::addResponseHandler(std::string_view pattern, ResponseHandler&& handler) -> void
+    auto Server::addResponseHandler(boost::beast::http::verb method, std::string_view pattern,
+                                    ResponseHandler&& handler) -> void
     {
-        response_router_.insert(pattern, std::move(handler));
+        // boost::urls::router<ResponseHandler> router;
+        // const auto& [iter, success] = response_routers_.try_emplace(method, std::move(router));
+        // iter->second.insert(pattern, std::move(handler));
+        response_routers_[std::to_underlying(method)]->insert(pattern, std::move(handler));
     }
 
     auto Server::addStaticFileRequestHandler(std::string_view pattern, RequestHandler&& handler)
@@ -80,8 +97,9 @@ namespace netdisk::core::http
                     }
                     catch (std::exception const& e)
                     {
-                        logger_->error("An error occoured in session: {}\nStacktrace: \n{}",
-                                       e.what(), boost::stacktrace::stacktrace());
+                        SPDLOG_LOGGER_ERROR(logger_,
+                                            "An error occoured in session: {}\nStacktrace: \n{}",
+                                            e.what(), boost::stacktrace::stacktrace());
                     }
                 }
             });
@@ -172,8 +190,10 @@ namespace netdisk::core::http
     {
         auto& request_headers = parser.get();
         const auto target = request_headers.target();
+        const auto method = request_headers.method();
         boost::urls::matches url_match;
-        if (const auto* handler = request_router_.find(target, url_match))
+        if (const auto* handler =
+                request_routers_[std::to_underlying(method)]->find(target, url_match))
         {
             co_return co_await (*handler)(parser, stream, buffer, url_match, config_, connection_id,
                                           extra_data);
@@ -205,22 +225,28 @@ namespace netdisk::core::http
                                 std::any& extra_data) -> boost::asio::awaitable<void>
     {
         const auto target = connection.getRequestProxy()->target();
+        const auto method = connection.getRequestProxy()->method();
         boost::urls::matches url_match;
-        if (connection.getRequestProxy()->method() == boost::beast::http::verb::options)
+        if (method == boost::beast::http::verb::options)
         {
             co_return co_await connection.optionsReply(config_);
         }
-        if (const auto* handler = response_router_.find(target, url_match))
+        if (const auto* handler =
+                response_routers_[std::to_underlying(method)]->find(target, url_match))
         {
             co_return co_await (*handler)(connection, url_match, config_, connection_id,
                                           extra_data);
         }
-        if (const auto* handler = static_file_response_router_.find(target, url_match))
+        if (method == boost::beast::http::verb::get)
         {
-            co_return co_await (*handler)(connection, url_match, config_, connection_id,
-                                          extra_data);
+            const auto* handler = static_file_response_router_.find(target, url_match);
+            if (handler != nullptr)
+            {
+                co_return co_await (*handler)(connection, url_match, config_, connection_id,
+                                              extra_data);
+            }
         }
-        logger_->info("HTTP 404 (Not Found): {}", target);
+        SPDLOG_LOGGER_INFO(logger_, "HTTP 404 (Not Found): {}", target);
         co_return co_await connection.errorReply(boost::beast::http::status::not_found,
                                                  "No such page", config_);
     }
