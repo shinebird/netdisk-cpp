@@ -246,7 +246,8 @@ namespace netdisk::core::http
                                               extra_data);
             }
         }
-        SPDLOG_LOGGER_INFO(logger_, "HTTP 404 (Not Found): {}", target);
+        SPDLOG_LOGGER_INFO(logger_, "HTTP 404 (Not Found): [{}] {}", target,
+                           boost::beast::http::to_string(method));
         co_return co_await connection.errorReply(boost::beast::http::status::not_found,
                                                  "No such page", config_);
     }

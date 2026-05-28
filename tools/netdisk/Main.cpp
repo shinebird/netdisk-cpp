@@ -4,11 +4,8 @@
 #include <cstdint>
 #include <iostream>
 #include <print>
-#include <ranges>
 #include <string>
 #include <string_view>
-#include <unordered_set>
-#include <vector>
 
 #include "CommandLine.hpp"
 
@@ -35,8 +32,12 @@ auto main(int argc, char* argv[]) -> int
     boost::program_options::positional_options_description positional_desc;
     desc.add_options()("help,h", "Help screen")(
         "http-port", boost::program_options::value<std::uint16_t>(), "Port to listen (HTTP)")(
-        "grpc-port", boost::program_options::value<std::uint16_t>(), "Port to listen (gRPC)")(
-        "threads,j", boost::program_options::value<std::uint64_t>(), "Number of threads to use")(
+        "grpc-port", boost::program_options::value<std::uint16_t>(),
+        "Port to listen (gRPC)")("threads,j",
+                                 boost::program_options::value<std::uint64_t>()->default_value(
+                                     std::thread::hardware_concurrency(),
+                                     std::format("{}", std::thread::hardware_concurrency())),
+                                 "Number of threads to use")(
         "file-logger-level",
         boost::program_options::value<spdlog::level::level_enum>()
             ->default_value(spdlog::level::level_enum::debug, "debug")
@@ -48,7 +49,10 @@ auto main(int argc, char* argv[]) -> int
             ->default_value(spdlog::level::level_enum::warn, "warn")
             ->notifier([](spdlog::level::level_enum)
                        { netdisk::tools::command_line::checkCustomType("file-logger-level"); }),
-        "Log level of console-logger [trace, debug, info, warn, err, critical, off]")
+        "Log level of console-logger [trace, debug, info, warn, err, critical, off]")(
+        "log-file-path",
+        boost::program_options::value<std::string>()->default_value("log.txt", "log.txt"),
+        "Path to log file")
 #ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
         ("database-path", boost::program_options::value<std::string>(), "Path to sqlite database")
 #endif
@@ -108,6 +112,7 @@ auto main(int argc, char* argv[]) -> int
     netdisk::utils::log::Logger logger;
     logger.setConsoleLogLevel(vm.at("console-logger-level").as<spdlog::level::level_enum>());
     logger.setFileLogLevel(vm.at("file-logger-level").as<spdlog::level::level_enum>());
+    logger.setLogPath(vm.at("log-file-path").as<std::string>());
     logger.init();
     server.setLogger(logger.getLogger());
 
@@ -115,6 +120,8 @@ auto main(int argc, char* argv[]) -> int
 
     server.initSSL();
     server.run();
+
+    spdlog::shutdown();
 
     return 0;
 }
