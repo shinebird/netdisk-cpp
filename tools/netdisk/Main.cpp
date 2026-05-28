@@ -65,9 +65,11 @@ auto main(int argc, char* argv[]) -> int
                boost::program_options::command_line_style::case_insensitive)
         .positional(positional_desc);
     boost::program_options::variables_map vm;
+    bool no_option = false;
     try
     {
         boost::program_options::parsed_options parsed_options = command_line_parser.run();
+        no_option = parsed_options.options.empty();
         boost::program_options::store(parsed_options, vm);
         boost::program_options::notify(vm);
     }
@@ -75,10 +77,9 @@ auto main(int argc, char* argv[]) -> int
     {
         std::println("An error occoured while parsing commmand-line: {}", e.what());
         throw e;
-        return -1;
     }
 
-    if (vm.contains("help") || vm.empty())
+    if (vm.contains("help") || no_option)
     {
         printHelpMessage(argv[0]);
         std::cout << "\n\n" << desc << '\n';
