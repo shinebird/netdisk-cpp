@@ -6,9 +6,10 @@ namespace netdisk::core::http
 #ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
                    repository::database::sqlite::Connection* database_connection,
 #endif
-                   controller::security::UserAuthenticator* user_authenticator)
+                   controller::security::UserAuthenticator* user_authenticator,
+                   controller::http::security::AuthorizationManager* authorization_manager)
         : port_(port), num_threads_(num_threads), database_connection_(database_connection),
-          user_authenticator_(user_authenticator)
+          user_authenticator_(user_authenticator), authorization_manager_(authorization_manager)
     {
     }
 
@@ -30,5 +31,11 @@ namespace netdisk::core::http
     auto Config::getUserAuthenticator() const -> controller::security::UserAuthenticator*
     {
         return this->user_authenticator_;
+    }
+
+    auto Config::getAuthorizationManager() const
+        -> controller::http::security::AuthorizationManager*
+    {
+        return this->authorization_manager_;
     }
 } // namespace netdisk::core::http

@@ -11,6 +11,7 @@
 
 #include "netdisk-cpp/controller/generic/security/UserAuthenticator.hpp"
 #include "netdisk-cpp/controller/http/Controller.hpp"
+#include "netdisk-cpp/controller/http/security/AuthorizationManager.hpp"
 #include "netdisk-cpp/core/http/Config.hpp"
 #include "netdisk-cpp/core/http/Server.hpp"
 #include "netdisk-cpp/core/http/config/CORS.hpp"
@@ -91,14 +92,15 @@ auto main(int argc, char* argv[]) -> int
         vm.at("database-path").as<std::string>());
 #endif
     netdisk::controller::security::UserAuthenticator user_authenticator;
+    netdisk::controller::http::security::AuthorizationManager authorization_manager;
 
-    netdisk::core::http::Server server(vm.at("http-port").as<std::uint16_t>(),
-                                       vm.at("threads").as<std::uint64_t>(),
+    netdisk::core::http::Server server(
+        vm.at("http-port").as<std::uint16_t>(), vm.at("threads").as<std::uint64_t>(),
 #ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
 
-                                       std::addressof(database_connection),
+        std::addressof(database_connection),
 #endif
-                                       std::addressof(user_authenticator));
+        std::addressof(user_authenticator), std::addressof(authorization_manager));
 
     netdisk::core::http::config::CORSRegistration cors_registration;
     cors_registration.setAllowHeaders(boost::beast::http::field::unknown);

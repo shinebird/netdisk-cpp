@@ -78,8 +78,7 @@ namespace netdisk::controller::http::security
                 {
                     if (const auto token = utils::jwt::createUserToken(user_name_value->c_str()))
                     {
-                        config.getUserAuthenticator()->loginUser(user_name_value->c_str(),
-                                                                 token.value());
+                        config.getUserAuthenticator()->loginUser(user, token.value());
                         SPDLOG_LOGGER_INFO(spdlog::get("multi_logger"),
                                            "User login: \"{}\" logged in successful",
                                            user_name_value->c_str());

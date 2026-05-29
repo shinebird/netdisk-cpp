@@ -24,13 +24,14 @@ namespace netdisk::core::http
 
                    repository::database::sqlite::Connection* database_connection,
 #endif
-                   controller::security::UserAuthenticator* user_authenticator_)
+                   controller::security::UserAuthenticator* user_authenticator_,
+                   controller::http::security::AuthorizationManager* authorization_manager)
         : config_(port, num_threads,
 #ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
 
                   database_connection,
 #endif
-                  user_authenticator_),
+                  user_authenticator_, authorization_manager),
           ssl_context_(boost::asio::ssl::context::tlsv13), io_context_(num_threads)
     {
         for (auto& item : request_routers_)
@@ -50,18 +51,12 @@ namespace netdisk::core::http
     auto Server::addRequestHandler(boost::beast::http::verb method, std::string_view pattern,
                                    RequestHandler&& handler) -> void
     {
-        // boost::urls::router<RequestHandler> router;
-        // const auto& [iter, success] = request_routers_.try_emplace(method, std::move(router));
-        // iter->second.insert(pattern, std::move(handler));
         request_routers_[std::to_underlying(method)]->insert(pattern, std::move(handler));
     }
 
     auto Server::addResponseHandler(boost::beast::http::verb method, std::string_view pattern,
                                     ResponseHandler&& handler) -> void
     {
-        // boost::urls::router<ResponseHandler> router;
-        // const auto& [iter, success] = response_routers_.try_emplace(method, std::move(router));
-        // iter->second.insert(pattern, std::move(handler));
         response_routers_[std::to_underlying(method)]->insert(pattern, std::move(handler));
     }
 

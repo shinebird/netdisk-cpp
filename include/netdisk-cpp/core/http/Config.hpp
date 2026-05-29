@@ -6,10 +6,17 @@
 
 namespace netdisk
 {
-    namespace controller::security
+    namespace controller
     {
-        class UserAuthenticator;
-    }
+        namespace security
+        {
+            class UserAuthenticator;
+        }
+        namespace http::security
+        {
+            class AuthorizationManager;
+        }
+    } // namespace controller
     namespace repository::database
     {
 #ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
@@ -29,7 +36,8 @@ namespace netdisk
 #ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
                        repository::database::sqlite::Connection* database_connection,
 #endif
-                       controller::security::UserAuthenticator* user_authenticator);
+                       controller::security::UserAuthenticator* user_authenticator,
+                       controller::http::security::AuthorizationManager* authorization_manager);
                 [[nodiscard]] auto getCORS() -> config::CORS&;
                 [[nodiscard]] auto getPort() const -> std::uint16_t;
                 [[nodiscard]] auto getNumThreads() const -> std::uint64_t;
@@ -39,6 +47,8 @@ namespace netdisk
 #endif
                 [[nodiscard]] auto getUserAuthenticator() const
                     -> controller::security::UserAuthenticator*;
+                [[nodiscard]] auto getAuthorizationManager() const
+                    -> controller::http::security::AuthorizationManager*;
 
             private:
                 std::uint16_t port_;
@@ -48,6 +58,7 @@ namespace netdisk
                 repository::database::sqlite::Connection* database_connection_;
 #endif
                 controller::security::UserAuthenticator* user_authenticator_;
+                controller::http::security::AuthorizationManager* authorization_manager_;
         };
     } // namespace core::http
 

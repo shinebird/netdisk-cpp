@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <utility>
 
-
 #include "netdisk-cpp/core/http/Config.hpp"
 #include "netdisk-cpp/core/http/Connection.hpp"
 #include "netdisk-cpp/core/http/Request.hpp"
@@ -35,7 +34,8 @@ namespace netdisk::core::http
 #ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
                    repository::database::sqlite::Connection* database_connection,
 #endif
-                   controller::security::UserAuthenticator* user_authenticator_);
+                   controller::security::UserAuthenticator* user_authenticator_,
+                   controller::http::security::AuthorizationManager* authorization_manager);
             Server(const Server&) = delete;
             auto operator=(const Server&) -> Server& = delete;
             Server(Server&& other) noexcept = delete;
@@ -54,8 +54,12 @@ namespace netdisk::core::http
 
         private:
             Config config_;
-            std::array<std::unique_ptr<boost::urls::router<RequestHandler>>, std::to_underlying(boost::beast::http::verb::unlink) + 1> request_routers_;
-            std::array<std::unique_ptr<boost::urls::router<ResponseHandler>>, std::to_underlying(boost::beast::http::verb::unlink) + 1> response_routers_;
+            std::array<std::unique_ptr<boost::urls::router<RequestHandler>>,
+                       std::to_underlying(boost::beast::http::verb::unlink) + 1>
+                request_routers_;
+            std::array<std::unique_ptr<boost::urls::router<ResponseHandler>>,
+                       std::to_underlying(boost::beast::http::verb::unlink) + 1>
+                response_routers_;
             boost::urls::router<RequestHandler> static_file_request_router_;
             boost::urls::router<ResponseHandler> static_file_response_router_;
             boost::asio::ssl::context ssl_context_;
