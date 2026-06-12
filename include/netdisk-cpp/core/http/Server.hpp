@@ -27,6 +27,8 @@ namespace netdisk::core::http
     using ResponseHandler = std::function<boost::asio::awaitable<void>(
         Connection&, const boost::urls::matches&, Config&, std::uint64_t, std::any&)>;
 
+    using AuthorizationHandler = std::function<bool(RequestView&, Config&)>;
+
     class Server
     {
         public:
@@ -49,6 +51,7 @@ namespace netdisk::core::http
                 -> void;
             auto addStaticFileResponseHandler(std::string_view pattern, ResponseHandler&& handler)
                 -> void;
+            auto setAuthorizationHandler(AuthorizationHandler&& handler) -> void;
             auto setLogger(std::shared_ptr<spdlog::logger> logger) -> void;
             auto run() -> void;
 
@@ -62,6 +65,7 @@ namespace netdisk::core::http
                 response_routers_;
             boost::urls::router<RequestHandler> static_file_request_router_;
             boost::urls::router<ResponseHandler> static_file_response_router_;
+            AuthorizationHandler authorization_handler_;
             boost::asio::ssl::context ssl_context_;
             boost::asio::io_context io_context_;
             boost::system::error_code error_code_;

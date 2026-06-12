@@ -1,9 +1,11 @@
 #include "netdisk-cpp/controller/http/Controller.hpp"
+#include "netdisk-cpp/controller/http/FileController.hpp"
 #include "netdisk-cpp/controller/http/StaticFileController.hpp"
 #include "netdisk-cpp/controller/http/UserServiceController.hpp"
 #include "netdisk-cpp/controller/http/security/AuthorizationManager.hpp"
 #include "netdisk-cpp/controller/http/security/AuthorizationRules.hpp"
 #include "netdisk-cpp/controller/http/security/LoginController.hpp"
+#include "netdisk-cpp/controller/http/security/VerifyUserToken.hpp"
 #include "netdisk-cpp/core/http/Server.hpp"
 
 #include <boost/beast/http/verb.hpp>
@@ -29,6 +31,10 @@ namespace netdisk::controller::http
         server.addRequestHandler(get, "/user/batchUploadFiles", request::batchUploadFiles);
         server.addResponseHandler(get, "/user/batchUploadFiles", response::batchUploadFiles);
 
+        server.addRequestHandler(post, "/service/file/listFiles", request::getShareableFiles);
+        server.addResponseHandler(post, "/service/file/listFiles",
+                                  response::getShareableFiles);
+
         server.addStaticFileRequestHandler("/user/{path+}", request::staticFile);
         server.addStaticFileResponseHandler("/user/{path+}", response::staticFile);
 
@@ -37,5 +43,6 @@ namespace netdisk::controller::http
                                                        security::authorization_rules::serviceGet);
         authorization_manager->addAuthorizationHandler(post, "/service/{path+}",
                                                        security::authorization_rules::servicePost);
+        server.setAuthorizationHandler(security::verifyUserToken);
     }
 } // namespace netdisk::controller::http

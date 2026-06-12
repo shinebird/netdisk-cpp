@@ -1,7 +1,8 @@
 add_compile_definitions(NETDISK_REPOSITORY_DATABASE_${NETDISK_REPOSITORY_DATABASE})
 
-add_subdirectory(core)
 add_subdirectory(utils)
+add_subdirectory(data)
+add_subdirectory(core)
 add_subdirectory(controller)
 add_subdirectory(service)
 add_subdirectory(repository)

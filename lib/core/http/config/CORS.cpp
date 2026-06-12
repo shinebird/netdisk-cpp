@@ -3,6 +3,7 @@
 
 #include <boost/beast/http/field.hpp>
 #include <boost/core/detail/string_view.hpp>
+#include <boost/url.hpp>
 
 #include <concepts>
 #include <cstddef>
@@ -78,7 +79,9 @@ namespace netdisk::core::http::config
                           std::error_code& error_code) -> void
     {
         boost::urls::matches url_match;
-        if (const auto* handler = cors_router_.find(target, url_match))
+        boost::urls::url url = *boost::urls::parse_relative_ref(target);
+        if (const auto* handler = cors_router_.find(
+                url.remove_query().encoded_segments(), url_match))
         {
             const auto index = (*handler)();
             const auto current_registration = registrations_.at(index);

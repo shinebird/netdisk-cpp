@@ -45,7 +45,7 @@ namespace netdisk::core::http
 
             template <typename Req> void setRequest(Req& req)
             {
-                request_ = pro::make_proxy_view<Request>(req);
+                request_ = pro::make_proxy_view<proxy::Request>(req);
             }
 
             void setRequestProxy(Request req);

@@ -1,5 +1,6 @@
 #include "netdisk-cpp/core/http/Server.hpp"
 #include "netdisk-cpp/core/http/Connection.hpp"
+#include "netdisk-cpp/core/http/Request.hpp"
 #include "netdisk-cpp/utils/log/Logger.hpp"
 #include "netdisk-cpp/utils/log/formatter/boost/stacktrace/stacktrace.hpp"
 #include "netdisk-cpp/utils/ssl/SSL.hpp"
@@ -13,7 +14,12 @@
 #include <boost/beast/core/tcp_stream.hpp>
 #include <boost/beast/http/impl/read.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <boost/url.hpp>
 
+#include <exception>
+#include <proxy/v4/proxy.h>
+
+#include <spdlog/spdlog.h>
 #include <utility>
 #include <vector>
 
@@ -70,6 +76,11 @@ namespace netdisk::core::http
         -> void
     {
         static_file_response_router_.insert(pattern, std::move(handler));
+    }
+
+    auto Server::setAuthorizationHandler(AuthorizationHandler&& handler) -> void
+    {
+        authorization_handler_ = std::move(handler);
     }
 
     auto Server::setLogger(std::shared_ptr<spdlog::logger> logger) -> void
@@ -154,20 +165,61 @@ namespace netdisk::core::http
             // Set the timeout.
             stream.next_layer().expires_after(std::chrono::seconds(30));
             auto connection_id = current_connection_id_.fetch_add(1);
-            std::any connection_extra_data;
             boost::beast::http::request_parser<boost::beast::http::empty_body> header_parser;
             co_await boost::beast::http::async_read_header(stream, buffer, header_parser,
                                                            boost::asio::use_awaitable);
-            const auto keep_alive = header_parser.keep_alive();
-            auto request = co_await handleRequest(header_parser, stream, buffer, connection_id,
-                                                  connection_extra_data);
+            auto request_view = pro::make_proxy_view<proxy::Request>(header_parser.get());
+            const auto target = request_view->target();
+            SPDLOG_LOGGER_INFO(logger_, "Processing {}", target);
+            std::any connection_extra_data;
             Connection connection(stream);
-            connection.setRequestProxy(std::move(request));
-            co_await handleResponse(std::move(connection), connection_id, connection_extra_data);
-            if (!keep_alive)
+            bool has_uncaught_exception = false;
+            try
             {
-                // This means we should close the connection, usually because
-                // the response indicated the "Connection: close" semantic.
+                if (authorization_handler_(request_view, config_))
+                {
+                    const auto keep_alive = header_parser.keep_alive();
+                    auto request = co_await handleRequest(header_parser, stream, buffer,
+                                                          connection_id, connection_extra_data);
+                    connection.setRequestProxy(std::move(request));
+                    co_await handleResponse(std::move(connection), connection_id,
+                                            connection_extra_data);
+                    if (!keep_alive)
+                    {
+                        // This means we should close the connection, usually because
+                        // the response indicated the "Connection: close" semantic.
+                        break;
+                    }
+                }
+                else
+                {
+                    header_parser.get().keep_alive(false);
+                    connection.setRequestProxy(
+                        pro::make_proxy<proxy::Request>(std::move(header_parser.get())));
+                    std::string_view msg = "401 Unauthorized";
+                    boost::beast::http::fields extra_fields;
+                    extra_fields.set(boost::beast::http::field::connection, "close");
+                    co_await connection.staticBodyReply(boost::beast::http::status::unauthorized,
+                                                        msg, msg.size(), "text/plain", config_,
+                                                        extra_fields);
+                    break;
+                }
+            }
+            catch (const std::exception& e)
+            {
+                SPDLOG_LOGGER_ERROR(
+                    logger_,
+                    "An error occoured while processing request/response: {}\nStacktrace: \n{}",
+                    e.what(), boost::stacktrace::stacktrace());
+                has_uncaught_exception = true;
+            }
+            if (has_uncaught_exception)
+            {
+                // why this crash?
+                // std::string_view msg = "500 Internal Server Error";
+                // co_await connection.staticBodyReply(
+                //     boost::beast::http::status::internal_server_error, msg, msg.size(),
+                //     "text/plain", config_);
                 break;
             }
         }
@@ -187,8 +239,9 @@ namespace netdisk::core::http
         const auto target = request_headers.target();
         const auto method = request_headers.method();
         boost::urls::matches url_match;
-        if (const auto* handler =
-                request_routers_[std::to_underlying(method)]->find(target, url_match))
+        boost::urls::url url = *boost::urls::parse_relative_ref(target);
+        if (const auto* handler = request_routers_[std::to_underlying(method)]->find(
+                url.remove_query().encoded_segments(), url_match))
         {
             co_return co_await (*handler)(parser, stream, buffer, url_match, config_, connection_id,
                                           extra_data);
@@ -207,7 +260,9 @@ namespace netdisk::core::http
         auto& request_headers = parser.get();
         const auto target = request_headers.target();
         boost::urls::matches url_match;
-        if (const auto* handler = static_file_request_router_.find(target, url_match))
+        boost::urls::url url = *boost::urls::parse_relative_ref(target);
+        if (const auto* handler =
+                static_file_request_router_.find(url.remove_query().encoded_segments(), url_match))
         {
             co_return co_await (*handler)(parser, stream, buffer, url_match, config_, connection_id,
                                           extra_data);
@@ -222,19 +277,21 @@ namespace netdisk::core::http
         const auto target = connection.getRequestProxy()->target();
         const auto method = connection.getRequestProxy()->method();
         boost::urls::matches url_match;
+        boost::urls::url url = *boost::urls::parse_relative_ref(target);
         if (method == boost::beast::http::verb::options)
         {
             co_return co_await connection.optionsReply(config_);
         }
-        if (const auto* handler =
-                response_routers_[std::to_underlying(method)]->find(target, url_match))
+        if (const auto* handler = response_routers_[std::to_underlying(method)]->find(
+                url.remove_query().encoded_segments(), url_match))
         {
             co_return co_await (*handler)(connection, url_match, config_, connection_id,
                                           extra_data);
         }
         if (method == boost::beast::http::verb::get)
         {
-            const auto* handler = static_file_response_router_.find(target, url_match);
+            const auto* handler =
+                static_file_response_router_.find(url.remove_query().encoded_segments(), url_match);
             if (handler != nullptr)
             {
                 co_return co_await (*handler)(connection, url_match, config_, connection_id,

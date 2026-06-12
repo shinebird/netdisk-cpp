@@ -11,7 +11,9 @@ add_library(NetdiskControllerHTTP STATIC ${generated_sources} Controller.cpp Use
     StaticFileController.cpp
     security/AuthorizationManager.cpp
     security/LoginController.cpp
-    security/AuthorizationRules.cpp)
+    security/AuthorizationRules.cpp
+    FileController.cpp
+    security/VerifyUserToken.cpp)
 add_library(Netdisk::Controller::HTTP ALIAS NetdiskControllerHTTP)
 target_include_directories(NetdiskControllerHTTP PUBLIC ${Boost_INCLUDE_DIRS})
 target_include_directories(NetdiskControllerHTTP PUBLIC ${CMAKE_SOURCE_DIR}/include)
@@ -21,3 +23,4 @@ target_link_libraries(NetdiskControllerHTTP PUBLIC msft_proxy4::proxy)
 target_link_libraries(NetdiskControllerHTTP PUBLIC Netdisk::Utils)
 target_link_libraries(NetdiskControllerHTTP PUBLIC Netdisk::Core::HTTP)
 target_link_libraries(NetdiskControllerHTTP PUBLIC Netdisk::Controller::Generic)
+target_link_libraries(NetdiskControllerHTTP PUBLIC Netdisk::Data)

@@ -34,7 +34,9 @@ set(Boost_LIBRARY_DIR "${Boost_ROOT}/lib" CACHE PATH "${Boost_ROOT}/lib")
 add_library(NetdiskUtils STATIC ssl/SSL.cpp url/MatchesImpl.cpp url/RouterImpl.cpp log/Logger.cpp
     exception/SignalHandler.cpp
     log/RelativePathFormatter.cpp
-    jwt/JWT.cpp)
+    jwt/JWT.cpp
+    filesystem/ListRoots.cpp
+    filesystem/FileQuery.cpp)
 add_library(Netdisk::Utils ALIAS NetdiskUtils)
 target_include_directories(NetdiskUtils PUBLIC ${Boost_INCLUDE_DIRS})
 target_include_directories(NetdiskUtils PUBLIC ${CMAKE_SOURCE_DIR}/include)
