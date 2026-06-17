@@ -213,13 +213,21 @@ namespace netdisk::core::http
                     e.what(), boost::stacktrace::stacktrace());
                 has_uncaught_exception = true;
             }
+            catch (...)
+            {
+                SPDLOG_LOGGER_ERROR(
+                    logger_,
+                    "An error occoured while processing request/response\nStacktrace: \n{}",
+                    boost::stacktrace::stacktrace());
+                has_uncaught_exception = true;
+            }
             if (has_uncaught_exception)
             {
                 // why this crash?
-                // std::string_view msg = "500 Internal Server Error";
-                // co_await connection.staticBodyReply(
-                //     boost::beast::http::status::internal_server_error, msg, msg.size(),
-                //     "text/plain", config_);
+                std::string_view msg = "500 Internal Server Error";
+                co_await connection.staticBodyReply(
+                    boost::beast::http::status::internal_server_error, msg, msg.size(),
+                    "text/plain", config_);
                 break;
             }
         }

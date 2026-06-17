@@ -1,5 +1,6 @@
 #include "netdisk-cpp/service/http/FileService.hpp"
 #include "netdisk-cpp/data/ShareableFile.hpp"
+#include "netdisk-cpp/utils/filesystem/FileQuery.hpp"
 #include "netdisk-cpp/utils/filesystem/ListRoots.hpp"
 
 #include <algorithm>
@@ -50,5 +51,12 @@ namespace netdisk::service::http
             }
         }
         return result;
+    }
+
+    auto checkFileExists(const std::filesystem::path& path) -> bool
+    {
+        std::error_code error_code;
+        const auto result = std::filesystem::exists(path, error_code);
+        return result && (!error_code) && utils::filesystem::isRegularFile(path).value_or(false);
     }
 } // namespace netdisk::service::http

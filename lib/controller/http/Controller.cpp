@@ -26,14 +26,16 @@ namespace netdisk::controller::http
         server.addResponseHandler(get, "/user/login", response::login);
         server.addRequestHandler(get, "/user/files", request::filePanel);
         server.addResponseHandler(get, "/user/files", response::filePanel);
-        server.addRequestHandler(get, "/user/downloadAndExtract", request::downloadAndExtract);
-        server.addResponseHandler(get, "/user/downloadAndExtract", response::downloadAndExtract);
-        server.addRequestHandler(get, "/user/batchUploadFiles", request::batchUploadFiles);
-        server.addResponseHandler(get, "/user/batchUploadFiles", response::batchUploadFiles);
+        server.addRequestHandler(get, "/user/downloadAndExtract", request::downloadAndExtractPage);
+        server.addResponseHandler(get, "/user/downloadAndExtract",
+                                  response::downloadAndExtractPage);
+        server.addRequestHandler(get, "/user/batchUploadFiles", request::batchUploadFilesPage);
+        server.addResponseHandler(get, "/user/batchUploadFiles", response::batchUploadFilesPage);
 
         server.addRequestHandler(post, "/service/file/listFiles", request::getShareableFiles);
-        server.addResponseHandler(post, "/service/file/listFiles",
-                                  response::getShareableFiles);
+        server.addResponseHandler(post, "/service/file/listFiles", response::getShareableFiles);
+        server.addRequestHandler(post, "/service/file/checkFileExists", request::checkFileExists);
+        server.addResponseHandler(post, "/service/file/checkFileExists", response::checkFileExists);
 
         server.addStaticFileRequestHandler("/user/{path+}", request::staticFile);
         server.addStaticFileResponseHandler("/user/{path+}", response::staticFile);

@@ -38,13 +38,13 @@ namespace netdisk::controller::http
                 parser, stream, buffer);
         }
 
-        NETDISK_CONTROLLER_REQUEST(downloadAndExtract)
+        NETDISK_CONTROLLER_REQUEST(downloadAndExtractPage)
         {
             co_return co_await internal::defaultHandler<boost::beast::http::dynamic_body, true>(
                 parser, stream, buffer);
         }
 
-        NETDISK_CONTROLLER_REQUEST(batchUploadFiles)
+        NETDISK_CONTROLLER_REQUEST(batchUploadFilesPage)
         {
             co_return co_await internal::defaultHandler<boost::beast::http::dynamic_body, true>(
                 parser, stream, buffer);
@@ -90,12 +90,12 @@ namespace netdisk::controller::http
             co_await internal::staticPage(connection, "/user/files.html", config);
         }
 
-        NETDISK_CONTROLLER_RESPONSE(downloadAndExtract)
+        NETDISK_CONTROLLER_RESPONSE(downloadAndExtractPage)
         {
             co_await internal::staticPage(connection, "/user/downloadAndExtract.html", config);
         }
 
-        NETDISK_CONTROLLER_RESPONSE(batchUploadFiles)
+        NETDISK_CONTROLLER_RESPONSE(batchUploadFilesPage)
         {
             co_await internal::staticPage(connection, "/user/batchUploadFiles.html", config);
         }

@@ -10,4 +10,6 @@ namespace netdisk::service::http
 {
     auto getShareableFiles(const std::expected<std::filesystem::path, std::string>& path)
         -> std::vector<data::ShareableFile>;
+
+    auto checkFileExists(const std::filesystem::path& path) -> bool;
 }

@@ -14,8 +14,8 @@ namespace netdisk::controller::http
         NETDISK_CONTROLLER_REQUEST(indexPage);
         NETDISK_CONTROLLER_REQUEST(login);
         NETDISK_CONTROLLER_REQUEST(filePanel);
-        NETDISK_CONTROLLER_REQUEST(downloadAndExtract);
-        NETDISK_CONTROLLER_REQUEST(batchUploadFiles);
+        NETDISK_CONTROLLER_REQUEST(downloadAndExtractPage);
+        NETDISK_CONTROLLER_REQUEST(batchUploadFilesPage);
     } // namespace request
     namespace response
     {
@@ -23,7 +23,7 @@ namespace netdisk::controller::http
         NETDISK_CONTROLLER_RESPONSE(indexPage);
         NETDISK_CONTROLLER_RESPONSE(login);
         NETDISK_CONTROLLER_RESPONSE(filePanel);
-        NETDISK_CONTROLLER_RESPONSE(downloadAndExtract);
-        NETDISK_CONTROLLER_RESPONSE(batchUploadFiles);
+        NETDISK_CONTROLLER_RESPONSE(downloadAndExtractPage);
+        NETDISK_CONTROLLER_RESPONSE(batchUploadFilesPage);
     } // namespace response
 } // namespace netdisk::controller::http
