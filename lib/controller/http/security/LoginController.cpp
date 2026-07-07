@@ -1,6 +1,5 @@
 #include "netdisk-cpp/controller/http/security/LoginController.hpp"
 #include "netdisk-cpp/controller/generic/security/UserAuthenticator.hpp"
-#include "netdisk-cpp/controller/http/Common.hpp"
 #include "netdisk-cpp/utils/jwt/JWT.hpp"
 
 #ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
@@ -37,8 +36,7 @@ namespace netdisk::controller::http::security
         {
             boost::beast::http::request_parser<boost::beast::http::string_body> new_parser{
                 std::move(parser)};
-            co_await boost::beast::http::async_read(stream, buffer, new_parser,
-                                                    boost::asio::use_awaitable);
+            co_await boost::beast::http::async_read(stream, buffer, new_parser);
 
             const auto& body = new_parser.get().body();
             boost::json::stream_parser json_parser;

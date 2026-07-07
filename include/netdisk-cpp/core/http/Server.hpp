@@ -1,8 +1,8 @@
 #pragma once
 
-#include <boost/asio/awaitable.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ssl/context.hpp>
+#include <boost/cobalt.hpp>
 #include <boost/system/error_code.hpp>
 
 #include <any>
@@ -14,21 +14,13 @@
 #include "netdisk-cpp/core/http/Config.hpp"
 #include "netdisk-cpp/core/http/Connection.hpp"
 #include "netdisk-cpp/core/http/Request.hpp"
+#include "netdisk-cpp/core/http/Types.hpp"
 #include "netdisk-cpp/utils/log/Logger.hpp"
 #include "netdisk-cpp/utils/url/Matches.hpp"
 #include "netdisk-cpp/utils/url/Router.hpp"
 
 namespace netdisk::core::http
 {
-    using RequestHandler = std::function<boost::asio::awaitable<Request>(
-        boost::beast::http::request_parser<boost::beast::http::empty_body>&,
-        boost::asio::ssl::stream<boost::beast::tcp_stream>&, boost::beast::flat_buffer&,
-        const boost::urls::matches&, Config&, std::uint64_t, std::any&)>;
-    using ResponseHandler = std::function<boost::asio::awaitable<void>(
-        Connection&, const boost::urls::matches&, Config&, std::uint64_t, std::any&)>;
-
-    using AuthorizationHandler = std::function<bool(RequestView&, Config&)>;
-
     class Server
     {
         public:
@@ -72,22 +64,19 @@ namespace netdisk::core::http
             std::shared_ptr<spdlog::logger> logger_;
             std::atomic_uint64_t current_connection_id_ = 0;
 
-            auto doListen(boost::asio::ip::tcp::endpoint endpoint) -> boost::asio::awaitable<void>;
-            auto doSession(boost::asio::ssl::stream<boost::beast::tcp_stream> stream)
-                -> boost::asio::awaitable<void>;
+            auto doListen(boost::asio::ip::tcp::endpoint endpoint) -> boost::cobalt::task<void>;
+            auto doSession(SSLSocketType stream) -> boost::cobalt::task<void>;
             auto handleRequest(
                 boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
-                boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
-                boost::beast::flat_buffer& buffer, std::uint64_t connection_id,
-                std::any& extra_data) -> boost::asio::awaitable<Request>;
+                SSLSocketType& stream, boost::beast::flat_buffer& buffer,
+                std::uint64_t connection_id, std::any& extra_data) -> boost::cobalt::task<Request>;
             auto handleStaticFileRequest(
                 boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
-                boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
-                boost::beast::flat_buffer& buffer, std::uint64_t connection_id,
-                std::any& extra_data) -> boost::asio::awaitable<Request>;
+                SSLSocketType& stream, boost::beast::flat_buffer& buffer,
+                std::uint64_t connection_id, std::any& extra_data) -> boost::cobalt::task<Request>;
             auto handleResponse(Connection connection, std::uint64_t connection_id,
-                                std::any& extra_data) -> boost::asio::awaitable<void>;
+                                std::any& extra_data) -> boost::cobalt::task<void>;
             auto handleStaticFileResponse(Connection connection, std::uint64_t connection_id,
-                                          std::any& extra_data) -> boost::asio::awaitable<void>;
+                                          std::any& extra_data) -> boost::cobalt::task<void>;
     };
 } // namespace netdisk::core::http

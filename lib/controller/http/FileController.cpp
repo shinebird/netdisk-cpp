@@ -19,8 +19,7 @@ namespace netdisk::controller::http
         {
             boost::beast::http::request_parser<boost::beast::http::string_body> new_parser{
                 std::move(parser)};
-            co_await boost::beast::http::async_read(stream, buffer, new_parser,
-                                                    boost::asio::use_awaitable);
+            co_await boost::beast::http::async_read(stream, buffer, new_parser);
             const auto& body = new_parser.get().body();
             boost::json::stream_parser json_parser;
             json_parser.reset();
@@ -68,8 +67,7 @@ namespace netdisk::controller::http
         {
             boost::beast::http::request_parser<boost::beast::http::string_body> new_parser{
                 std::move(parser)};
-            co_await boost::beast::http::async_read(stream, buffer, new_parser,
-                                                    boost::asio::use_awaitable);
+            co_await boost::beast::http::async_read(stream, buffer, new_parser);
             const auto& body = new_parser.get().body();
             boost::json::stream_parser json_parser;
             json_parser.reset();
@@ -98,6 +96,8 @@ namespace netdisk::controller::http
             extra_data = fs_path;
             co_return pro::make_proxy<core::http::proxy::Request>(std::move(new_parser.get()));
         }
+
+        // NETDISK_CONTROLLER_REQUEST(batchDownloadFile) {}
     } // namespace request
 
     namespace response
@@ -136,5 +136,7 @@ namespace netdisk::controller::http
                                                           json_string, json_string.size(),
                                                           "application/json", config);
         }
+
+        // NETDISK_CONTROLLER_RESPONSE(batchDownloadFile) {}
     } // namespace response
 } // namespace netdisk::controller::http

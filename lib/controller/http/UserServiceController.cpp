@@ -57,7 +57,7 @@ namespace netdisk::controller::http
             namespace
             {
                 auto staticPage(core::http::Connection& connection, const std::string_view target,
-                                core::http::Config& config) -> boost::asio::awaitable<void>
+                                core::http::Config& config) -> boost::cobalt::task<void>
                 {
                     const auto embed_data = data::getEmbedData(target);
                     const auto mime_type = *(utils::mime_type::getMimeTypes(

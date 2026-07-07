@@ -6,14 +6,14 @@
 #include "netdisk-cpp/utils/ssl/SSL.hpp"
 #include "netdisk-cpp/utils/url/Matches.hpp"
 
-#include <boost/asio/awaitable.hpp>
-#include <boost/asio/co_spawn.hpp>
 #include <boost/asio/detached.hpp>
 #include <boost/asio/io_context.hpp>
-#include <boost/asio/use_awaitable.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/beast/core/tcp_stream.hpp>
 #include <boost/beast/http/impl/read.hpp>
+#include <boost/cobalt.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <boost/stacktrace/this_thread.hpp>
 #include <boost/url.hpp>
 
 #include <exception>
@@ -91,71 +91,76 @@ namespace netdisk::core::http
     auto Server::run() -> void
     {
         auto const address = boost::asio::ip::make_address("::");
-        boost::asio::co_spawn(
-            io_context_, doListen(boost::asio::ip::tcp::endpoint{address, config_.getPort()}),
-            [&](std::exception_ptr e)
-            {
-                if (e)
-                {
-                    try
-                    {
-                        std::rethrow_exception(e);
-                    }
-                    catch (std::exception const& e)
-                    {
-                        SPDLOG_LOGGER_ERROR(logger_,
-                                            "An error occoured in session: {}\nStacktrace: \n{}",
-                                            e.what(), boost::stacktrace::stacktrace());
-                    }
-                }
-            });
+        boost::cobalt::spawn(io_context_,
+                             doListen(boost::asio::ip::tcp::endpoint{address, config_.getPort()}),
+                             [&](std::exception_ptr e)
+                             {
+                                 // if (e)
+                                 // {
+                                 //     try
+                                 //     {
+                                 //         std::rethrow_exception(e);
+                                 //     }
+                                 //     catch (std::exception const& e)
+                                 //     {
+                                 //         SPDLOG_LOGGER_ERROR(
+                                 //             logger_, "An error occoured in session:
+                                 //             {}\nStacktrace: \n{}", e.what(),
+                                 //             boost::stacktrace::stacktrace::from_current_exception());
+                                 //     }
+                                 // }
+                             });
 
         // Run the I/O service on the requested number of threads
+        boost::stacktrace::this_thread::set_capture_stacktraces_at_throw(true);
         std::vector<std::jthread> threads;
         threads.reserve(config_.getNumThreads() - 1);
         for (auto i = config_.getNumThreads() - 1; i > 0; --i)
         {
-            threads.emplace_back([&] { io_context_.run(); });
+            threads.emplace_back(
+                [&]
+                {
+                    boost::stacktrace::this_thread::set_capture_stacktraces_at_throw(true);
+                    io_context_.run();
+                });
         }
         io_context_.run();
     }
 
-    auto Server::doListen(boost::asio::ip::tcp::endpoint endpoint) -> boost::asio::awaitable<void>
+    auto Server::doListen(boost::asio::ip::tcp::endpoint endpoint) -> boost::cobalt::task<void>
     {
-        auto executor = co_await boost::asio::this_coro::executor;
-        auto acceptor = boost::asio::ip::tcp::acceptor{executor, endpoint};
+        auto executor = co_await boost::cobalt::this_coro::executor;
+        auto acceptor = AcceptorType{executor, endpoint};
 
         for (;;)
         {
-            auto ssl_stream = boost::asio::ssl::stream<boost::beast::tcp_stream>(
-                boost::beast::tcp_stream{
-                    co_await acceptor.async_accept(boost::asio::use_awaitable)},
-                ssl_context_);
+            auto ssl_stream =
+                SSLSocketType(SocketType{co_await acceptor.async_accept()}, ssl_context_);
             try
             {
-                co_await ssl_stream.async_handshake(boost::asio::ssl::stream_base::server,
-                                                    boost::asio::use_awaitable);
+                co_await ssl_stream.async_handshake(boost::asio::ssl::stream_base::server);
             }
             catch (const boost::system::system_error& e)
             {
                 SPDLOG_LOGGER_WARN(logger_, "An error occurred while SSL handshake: {}\n{}",
-                                   e.what(), boost::stacktrace::stacktrace());
+                                   e.what(),
+                                   boost::stacktrace::stacktrace::from_current_exception());
             }
             try
             {
-                boost::asio::co_spawn(executor, doSession(std::move(ssl_stream)),
-                                      boost::asio::detached);
+                boost::cobalt::spawn(executor, doSession(std::move(ssl_stream)),
+                                     boost::asio::detached);
             }
             catch (std::exception const& e)
             {
                 SPDLOG_LOGGER_ERROR(logger_, "An error occoured in session: {}\nStacktrace: \n{}",
-                                    e.what(), boost::stacktrace::stacktrace());
+                                    e.what(),
+                                    boost::stacktrace::stacktrace::from_current_exception());
             }
         }
     }
 
-    auto Server::doSession(boost::asio::ssl::stream<boost::beast::tcp_stream> stream)
-        -> boost::asio::awaitable<void>
+    auto Server::doSession(SSLSocketType stream) -> boost::cobalt::task<void>
     {
         // This buffer is required to persist across reads
         boost::beast::flat_buffer buffer;
@@ -163,11 +168,10 @@ namespace netdisk::core::http
         for (;;)
         {
             // Set the timeout.
-            stream.next_layer().expires_after(std::chrono::seconds(30));
+            // stream.next_layer().expires_after(std::chrono::seconds(30));
             auto connection_id = current_connection_id_.fetch_add(1);
             boost::beast::http::request_parser<boost::beast::http::empty_body> header_parser;
-            co_await boost::beast::http::async_read_header(stream, buffer, header_parser,
-                                                           boost::asio::use_awaitable);
+            co_await boost::beast::http::async_read_header(stream, buffer, header_parser);
             auto request_view = pro::make_proxy_view<proxy::Request>(header_parser.get());
             const auto target = request_view->target();
             SPDLOG_LOGGER_INFO(logger_, "Processing {}", target);
@@ -210,7 +214,7 @@ namespace netdisk::core::http
                 SPDLOG_LOGGER_ERROR(
                     logger_,
                     "An error occoured while processing request/response: {}\nStacktrace: \n{}",
-                    e.what(), boost::stacktrace::stacktrace());
+                    e.what(), boost::stacktrace::stacktrace::from_current_exception());
                 has_uncaught_exception = true;
             }
             catch (...)
@@ -218,7 +222,7 @@ namespace netdisk::core::http
                 SPDLOG_LOGGER_ERROR(
                     logger_,
                     "An error occoured while processing request/response\nStacktrace: \n{}",
-                    boost::stacktrace::stacktrace());
+                    boost::stacktrace::stacktrace::from_current_exception());
                 has_uncaught_exception = true;
             }
             if (has_uncaught_exception)
@@ -239,9 +243,8 @@ namespace netdisk::core::http
 
     auto Server::handleRequest(
         boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
-        boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
-        boost::beast::flat_buffer& buffer, std::uint64_t connection_id, std::any& extra_data)
-        -> boost::asio::awaitable<Request>
+        SSLSocketType& stream, boost::beast::flat_buffer& buffer, std::uint64_t connection_id,
+        std::any& extra_data) -> boost::cobalt::task<Request>
     {
         auto& request_headers = parser.get();
         const auto target = request_headers.target();
@@ -261,9 +264,8 @@ namespace netdisk::core::http
 
     auto Server::handleStaticFileRequest(
         boost::beast::http::request_parser<boost::beast::http::empty_body>& parser,
-        boost::asio::ssl::stream<boost::beast::tcp_stream>& stream,
-        boost::beast::flat_buffer& buffer, std::uint64_t connection_id, std::any& extra_data)
-        -> boost::asio::awaitable<Request>
+        SSLSocketType& stream, boost::beast::flat_buffer& buffer, std::uint64_t connection_id,
+        std::any& extra_data) -> boost::cobalt::task<Request>
     {
         auto& request_headers = parser.get();
         const auto target = request_headers.target();
@@ -280,7 +282,7 @@ namespace netdisk::core::http
     }
 
     auto Server::handleResponse(Connection connection, std::uint64_t connection_id,
-                                std::any& extra_data) -> boost::asio::awaitable<void>
+                                std::any& extra_data) -> boost::cobalt::task<void>
     {
         const auto target = connection.getRequestProxy()->target();
         const auto method = connection.getRequestProxy()->method();

@@ -28,8 +28,7 @@ namespace netdisk::core::http
 #define COMMON_SHUTDOWN_SSL                                                                        \
     if (!request_->keep_alive())                                                                   \
     {                                                                                              \
-        if (socket_.next_layer().socket().shutdown(boost::asio::ip::tcp::socket::shutdown_send,    \
-                                                   this->error_code_))                             \
+        if (socket_.shutdown(this->error_code_))                                                   \
         {                                                                                          \
             SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"),                                        \
                                "An error occoured while shutting down SSL connection: {}",         \
@@ -44,7 +43,7 @@ namespace netdisk::core::http
     auto Connection::staticBodyReply(boost::beast::http::status status, std::string_view msg,
                                      std::size_t msg_size, std::string_view mime_type,
                                      Config& config, const boost::beast::http::fields& extra_fields)
-        -> boost::asio::awaitable<void>
+        -> boost::cobalt::task<void>
     {
         boost::beast::http::response<boost::beast::http::buffer_body> res{status,
                                                                           request_->version()};
@@ -60,8 +59,7 @@ namespace netdisk::core::http
         res.content_length(msg_size);
         // res.prepare_payload();
         boost::beast::http::response_serializer<boost::beast::http::buffer_body> serializer(res);
-        co_await boost::beast::http::async_write_header(socket_, serializer,
-                                                        boost::asio::use_awaitable);
+        co_await boost::beast::http::async_write_header(socket_, serializer, boost::cobalt::use_op);
         std::size_t offset = 0;
         constexpr std::size_t chunk_size = 64 * 1024;
         boost::beast::error_code ec;
@@ -86,14 +84,14 @@ namespace netdisk::core::http
         res.body().data = nullptr;
         res.body().size = 0;
         res.body().more = false;
-        co_await boost::beast::http::async_write(socket_, serializer, boost::asio::use_awaitable);
+        co_await boost::beast::http::async_write(socket_, serializer);
         COMMON_SHUTDOWN_SSL
     }
 
     auto Connection::staticBodyReplyWithETag(boost::beast::http::status status,
                                              std::string_view msg, std::size_t msg_size,
                                              std::string_view mime_type, std::string_view e_tag,
-                                             Config& config) -> boost::asio::awaitable<void>
+                                             Config& config) -> boost::cobalt::task<void>
     {
         boost::beast::http::fields extra_fields;
         extra_fields.set(boost::beast::http::field::etag, e_tag);
@@ -107,13 +105,12 @@ namespace netdisk::core::http
     }
 
     auto Connection::errorReply(boost::beast::http::status status, std::string_view msg,
-                                Config& config) -> boost::asio::awaitable<void>
+                                Config& config) -> boost::cobalt::task<void>
     {
         co_return co_await staticBodyReply(status, msg, msg.size(), "text/html", config);
     }
 
-    auto Connection::fileReply(std::string_view path, Config& config)
-        -> boost::asio::awaitable<void>
+    auto Connection::fileReply(std::string_view path, Config& config) -> boost::cobalt::task<void>
     {
         boost::beast::http::file_body::value_type body;
         body.open(path.data(), boost::beast::file_mode::scan, error_code_);
@@ -136,25 +133,24 @@ namespace netdisk::core::http
         res.keep_alive(request_->keep_alive());
         std::error_code error_code;
         ADD_CORS_HEADERS(request_, res, error_code)
-        co_await boost::beast::http::async_write(socket_, res, boost::asio::use_awaitable);
+        co_await boost::beast::http::async_write(socket_, res);
         COMMON_SHUTDOWN_SSL
     }
 
-    auto Connection::stringReply(std::string_view msg, Config& config)
-        -> boost::asio::awaitable<void>
+    auto Connection::stringReply(std::string_view msg, Config& config) -> boost::cobalt::task<void>
     {
         co_return co_await staticBodyReply(boost::beast::http::status::ok, msg, msg.size(),
                                            "text/html", config);
     }
 
-    auto Connection::optionsReply(Config& config) -> boost::asio::awaitable<void>
+    auto Connection::optionsReply(Config& config) -> boost::cobalt::task<void>
     {
         co_return co_await staticBodyReply(boost::beast::http::status::no_content, "", 0,
                                            "text/html", config);
     }
 
     auto Connection::redirectReply(std::string_view new_target, Config& config)
-        -> boost::asio::awaitable<void>
+        -> boost::cobalt::task<void>
     {
         boost::beast::http::response<boost::beast::http::string_body> res{
             boost::beast::http::status::moved_permanently, request_->version()};
@@ -165,7 +161,7 @@ namespace netdisk::core::http
         res.keep_alive(request_->keep_alive());
         std::error_code error_code;
         ADD_CORS_HEADERS(request_, res, error_code)
-        co_await boost::beast::http::async_write(socket_, res, boost::asio::use_awaitable);
+        co_await boost::beast::http::async_write(socket_, res);
         COMMON_SHUTDOWN_SSL
     }
 } // namespace netdisk::core::http

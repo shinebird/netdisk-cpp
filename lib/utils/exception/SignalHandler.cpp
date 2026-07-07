@@ -43,7 +43,7 @@ namespace netdisk::utils::exception::signal
             SPDLOG_LOGGER_ERROR(
                 spdlog::get("multi_logger"),
                 "Program crashed, see the following stack trace for more infomation: \n\n{}",
-                boost::stacktrace::stacktrace());
+                boost::stacktrace::stacktrace::from_current_exception());
         }
         catch (...)
         {
