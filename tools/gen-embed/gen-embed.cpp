@@ -15,7 +15,7 @@
 
 #include "gen-embed.hpp"
 
-static void printHelpMessage(const std::string_view& program_name)
+static void printHelpMessage(std::string_view program_name)
 {
     std::println(std::cout,
                  "c++26 embed-based source file generator\nUsage: {} [options] <input>\n",

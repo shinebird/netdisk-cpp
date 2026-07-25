@@ -21,7 +21,7 @@
     #include "netdisk-cpp/repository/sqlite/DataBaseConnection.hpp"
 #endif
 
-static void printHelpMessage(const std::string_view& program_name)
+static void printHelpMessage(std::string_view program_name)
 {
     std::println(std::cout, "Personal Netdisk Main Application\nUsage: {} [options] <input>\n",
                  program_name);

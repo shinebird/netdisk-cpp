@@ -20,7 +20,7 @@
 #include "netdisk-cpp/utils/string/StringUtils.hpp"
 
 
-static void printHelpMessage(const std::string_view& program_name)
+static void printHelpMessage(std::string_view program_name)
 {
     std::println(std::cout, "Mime-Type CSV to C++ file generator\nUsage: {} [options] <input>\n",
                  program_name);
