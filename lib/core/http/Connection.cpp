@@ -104,6 +104,55 @@ namespace netdisk::core::http
         co_return co_await staticBodyReply(status, msg, msg_size, mime_type, config, extra_fields);
     }
 
+    auto Connection::multiPartReply(boost::beast::http::status status,
+                                    message::MultipartContext& multipart_context, Config& config,
+                                    const boost::beast::http::fields& extra_fields)
+        -> boost::cobalt::task<void>
+    {
+        boost::beast::http::response<boost::beast::http::buffer_body> res{status,
+                                                                          request_->version()};
+        res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
+        res.set(boost::beast::http::field::content_type,
+                std::format("multipart/form-data; boundary={}", multipart_context.getBoundary()));
+        res.keep_alive(request_->keep_alive());
+        for (const auto& item : extra_fields)
+        {
+            res.insert(item.name(), item.value());
+        }
+        const auto body_size = multipart_context.totalSize();
+        if (body_size)
+        {
+            res.content_length(*body_size);
+        }
+        else
+        {
+            res.chunked(true);
+        }
+        std::error_code error_code;
+        ADD_CORS_HEADERS(request_, res, error_code)
+        boost::beast::http::response_serializer<boost::beast::http::buffer_body> serializer(res);
+        co_await boost::beast::http::async_write_header(socket_, serializer, boost::cobalt::use_op);
+        boost::beast::error_code ec;
+        while (co_await multipart_context.fillBuffer(res.body()))
+        {
+            co_await boost::beast::http::async_write(socket_, serializer,
+                                                     boost::asio::redirect_error(ec));
+            if (ec == boost::beast::http::error::need_buffer || (!ec))
+            {
+                ec = {};
+            }
+            else
+            {
+                throw boost::beast::system_error(ec);
+            }
+        }
+        res.body().data = nullptr;
+        res.body().size = 0;
+        res.body().more = false;
+        co_await boost::beast::http::async_write(socket_, serializer);
+        COMMON_SHUTDOWN_SSL
+    }
+
     auto Connection::errorReply(boost::beast::http::status status, std::string_view msg,
                                 Config& config) -> boost::cobalt::task<void>
     {
