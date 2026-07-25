@@ -1,5 +1,8 @@
 #include <boost/stacktrace.hpp>
+#include <boost/stacktrace/stacktrace.hpp>
+#include <boost/stacktrace/this_thread.hpp>
 #include <boost/type_index.hpp>
+
 
 #include "netdisk-cpp/utils/exception/SignalHandler.hpp"
 #include "netdisk-cpp/utils/log/Logger.hpp"

@@ -146,7 +146,7 @@ namespace netdisk::utils::filesystem
         return false;
 
 #else
-        return std::filesystem::is_regular_file(path);
+        return std::filesystem::is_directory(path);;
 #endif
     }
 

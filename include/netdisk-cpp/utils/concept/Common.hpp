@@ -56,7 +56,12 @@ namespace netdisk::utils::reflect
     };
 
     template <typename T>
-    concept StringLike = std::is_same_v<std::string, T> || std::is_same_v<std::string_view, T>;
+    concept StringLike = requires(const T& s) {
+        { s.data() } -> std::convertible_to<const char*>;
+        { s.size() } -> std::convertible_to<std::size_t>;
+
+        { std::string_view(s) } noexcept;
+    };
 
     template <typename T>
     concept Enum = std::is_enum_v<T>;
@@ -117,4 +122,4 @@ namespace netdisk::utils::reflect
     concept Getable = TupleLike<T> || Struct<T>;
 #endif
 
-} // namespace solar
+} // namespace netdisk::utils::reflect

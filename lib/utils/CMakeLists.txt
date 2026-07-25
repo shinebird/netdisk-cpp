@@ -24,6 +24,8 @@ find_package(Boost REQUIRED)
 find_package(OpenSSL COMPONENTS Crypto SSL REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(jwt-cpp REQUIRED)
+find_package(eve REQUIRED)
+# find_package(fmt REQUIRED)
 
 # find_package(LLVM REQUIRED)
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
@@ -36,7 +38,9 @@ add_library(NetdiskUtils STATIC ssl/SSL.cpp url/MatchesImpl.cpp url/RouterImpl.c
     log/RelativePathFormatter.cpp
     jwt/JWT.cpp
     filesystem/ListRoots.cpp
-    filesystem/FileQuery.cpp)
+    filesystem/FileQuery.cpp
+    url/HTTPParamEncodings.cpp
+    string/StringUtils.cpp)
 add_library(Netdisk::Utils ALIAS NetdiskUtils)
 target_include_directories(NetdiskUtils PUBLIC ${Boost_INCLUDE_DIRS})
 target_include_directories(NetdiskUtils PUBLIC ${CMAKE_SOURCE_DIR}/include)
@@ -46,6 +50,8 @@ target_link_libraries(NetdiskUtils PUBLIC spdlog::spdlog)
 target_link_libraries(NetdiskUtils PUBLIC Netdisk::EmbedData)
 target_link_libraries(NetdiskUtils PUBLIC Netdisk::MimeTypes)
 target_link_libraries(NetdiskUtils PUBLIC jwt-cpp::jwt-cpp)
+target_link_libraries(NetdiskUtils PUBLIC eve::eve)
+# target_link_libraries(NetdiskUtils PUBLIC fmt::fmt)
 target_compile_definitions(NetdiskUtils PUBLIC SPDLOG_USE_STD_FORMAT)
 target_compile_definitions(NetdiskUtils PUBLIC SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
 target_compile_definitions(NetdiskUtils PRIVATE NETDISK_BASE_DIR="${CMAKE_SOURCE_DIR}")

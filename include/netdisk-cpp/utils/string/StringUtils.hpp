@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <string_view>
-
+#include <vector>
 
 namespace netdisk::utils::string
 {
@@ -19,10 +19,14 @@ namespace netdisk::utils::string
     {
             using is_transparent = void; // Enables heterogeneous operations.
 
-            auto operator()(const std::string_view& lhs, const std::string_view& rhs) const -> bool
+            auto operator()(std::string_view lhs, std::string_view rhs) const -> bool
             {
                 return std::ranges::lexicographical_compare(
                     lhs, rhs, [](char l, char r) { return std::tolower(l) < std::tolower(r); });
             }
     };
+
+    auto joinWithNewline(const std::vector<std::string>& lines) -> std::string;
+
+    auto isAscii(std::string_view str) -> bool;
 } // namespace netdisk::utils::string

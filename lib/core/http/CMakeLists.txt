@@ -8,7 +8,8 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 string(REGEX REPLACE "/include.*$" "" Boost_ROOT ${Boost_INCLUDE_DIRS})
 set(Boost_LIBRARY_DIR "${Boost_ROOT}/lib" CACHE PATH "${Boost_ROOT}/lib")
 
-add_library(NetdiskCoreHTTP STATIC Server.cpp Connection.cpp config/CORS.cpp Config.cpp ${generated_sources})
+add_library(NetdiskCoreHTTP STATIC ${generated_sources} Server.cpp Connection.cpp config/CORS.cpp Config.cpp
+    message/MultiPart.cpp)
 add_library(Netdisk::Core::HTTP ALIAS NetdiskCoreHTTP)
 target_include_directories(NetdiskCoreHTTP PUBLIC ${Boost_INCLUDE_DIRS})
 target_include_directories(NetdiskCoreHTTP PUBLIC ${CMAKE_SOURCE_DIR}/include)

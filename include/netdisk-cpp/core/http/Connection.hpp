@@ -6,7 +6,6 @@
 #include <boost/beast/http.hpp>
 #include <boost/cobalt.hpp>
 
-
 #include <proxy/v4/proxy.h>
 
 #include <string_view>
@@ -14,6 +13,7 @@
 #include "netdisk-cpp/core/http/Config.hpp"
 #include "netdisk-cpp/core/http/Request.hpp"
 #include "netdisk-cpp/core/http/Types.hpp"
+#include "netdisk-cpp/core/http/message/MultiPart.hpp"
 
 namespace netdisk::core::http
 {
@@ -41,6 +41,11 @@ namespace netdisk::core::http
             auto optionsReply(Config& config) -> boost::cobalt::task<void>;
 
             auto redirectReply(std::string_view new_target, Config& config)
+                -> boost::cobalt::task<void>;
+
+            auto multiPartReply(boost::beast::http::status status,
+                                message::MultipartContext& multipart_context, Config& config,
+                                const boost::beast::http::fields& extra_fields = {})
                 -> boost::cobalt::task<void>;
 
             template <typename Req> void setRequest(Req& req)
