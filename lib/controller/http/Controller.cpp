@@ -36,6 +36,8 @@ namespace netdisk::controller::http
         server.addResponseHandler(post, "/service/file/listFiles", response::getShareableFiles);
         server.addRequestHandler(post, "/service/file/checkFileExists", request::checkFileExists);
         server.addResponseHandler(post, "/service/file/checkFileExists", response::checkFileExists);
+        server.addRequestHandler(get, "/service/file/batchDownload", request::batchDownloadFile);
+        server.addResponseHandler(get, "/service/file/batchDownload", response::batchDownloadFile);
 
         server.addStaticFileRequestHandler("/user/{path+}", request::staticFile);
         server.addStaticFileResponseHandler("/user/{path+}", response::staticFile);

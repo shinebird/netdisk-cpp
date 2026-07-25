@@ -1,15 +1,28 @@
 #pragma once
 
 #include <boost/asio/ssl.hpp>
-#include <boost/asio/use_awaitable.hpp>
 #include <boost/beast.hpp>
 #include <boost/cobalt.hpp>
+#include <boost/url.hpp>
 
 #include "netdisk-cpp/core/http/Request.hpp"
 #include "netdisk-cpp/core/http/Types.hpp"
+#include "netdisk-cpp/utils/concept/Common.hpp"
 
 namespace netdisk::controller::http
 {
+    inline auto getParam(const boost::urls::params_view& params,
+                                const boost::core::string_view key) -> std::string
+    {
+        const auto iter = params.find(key);
+        return {iter != params.end() ? (*iter).value : ""};
+    }
+
+    template <utils::reflect::StringLike... T> auto hasAllRequestParams(T&&... params) -> bool
+    {
+        return (!std::empty(std::forward<T>(params)) && ...);
+    }
+
     namespace request
     {
         namespace internal

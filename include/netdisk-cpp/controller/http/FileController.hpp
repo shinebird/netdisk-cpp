@@ -12,11 +12,13 @@ namespace netdisk::controller::http
     {
         NETDISK_CONTROLLER_REQUEST(getShareableFiles);
         NETDISK_CONTROLLER_REQUEST(checkFileExists);
+        NETDISK_CONTROLLER_REQUEST(batchDownloadFile);
     }
 
     namespace response
     {
         NETDISK_CONTROLLER_RESPONSE(getShareableFiles);
         NETDISK_CONTROLLER_RESPONSE(checkFileExists);
+        NETDISK_CONTROLLER_RESPONSE(batchDownloadFile);
     }
 } // namespace netdisk::controller::http
