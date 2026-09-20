@@ -1,6 +1,8 @@
 #include "netdisk-cpp/controller/http/security/LoginController.hpp"
 #include "netdisk-cpp/controller/generic/security/UserAuthenticator.hpp"
+#include "netdisk-cpp/utils/Config.h"
 #include "netdisk-cpp/utils/jwt/JWT.hpp"
+
 
 #ifdef NETDISK_REPOSITORY_DATABASE_SQLITE
     #include "netdisk-cpp/repository/sqlite/UserRepository.hpp"
@@ -54,17 +56,25 @@ namespace netdisk::controller::http::security
                     user_name_value->c_str(), config.getDatabaseConnection());
                 if (user.getId() == data::User::invalid_id_)
                 {
-                    SPDLOG_LOGGER_INFO(spdlog::get("multi_logger"), "User login: Invalid id \"{}\"",
-                                       user.getId());
+                    [&]() NO_INLINE
+                    {
+                        SPDLOG_LOGGER_INFO(spdlog::get("multi_logger"),
+                                           "User login: Invalid id \"{}\"", user.getId());
+                    }();
+
                     valid_user = false;
                 }
                 else // username is valid
                 {
                     if (user.getPassword() != password_value->c_str()) // password is invalid
                     {
-                        SPDLOG_LOGGER_INFO(spdlog::get("multi_logger"),
-                                           "User login: Invalid password for user \"{}\"",
-                                           user_name_value->c_str());
+                        [&]() NO_INLINE
+                        {
+                            SPDLOG_LOGGER_INFO(spdlog::get("multi_logger"),
+                                               "User login: Invalid password for user \"{}\"",
+                                               user_name_value->c_str());
+                        }();
+
                         valid_user = false;
                     }
                     else // password is valid
@@ -77,9 +87,13 @@ namespace netdisk::controller::http::security
                     if (const auto token = utils::jwt::createUserToken(user_name_value->c_str()))
                     {
                         config.getUserAuthenticator()->loginUser(user, token.value());
-                        SPDLOG_LOGGER_INFO(spdlog::get("multi_logger"),
-                                           "User login: \"{}\" logged in successful",
-                                           user_name_value->c_str());
+                        [&]() NO_INLINE
+                        {
+                            SPDLOG_LOGGER_INFO(spdlog::get("multi_logger"),
+                                               "User login: \"{}\" logged in successful",
+                                               user_name_value->c_str());
+                        }();
+
                         valid_user = true;
                         login_status.token_ = *token;
                     }
@@ -93,10 +107,13 @@ namespace netdisk::controller::http::security
             }
             else
             {
-                SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"),
-                                   "An error occoured while logging in: wrong JSON");
-                SPDLOG_LOGGER_DEBUG(spdlog::get("multi_logger"), "JSON to log in was: {}",
-                                    body.c_str());
+                [&]() NO_INLINE
+                {
+                    SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"),
+                                       "An error occoured while logging in: wrong JSON");
+                    SPDLOG_LOGGER_DEBUG(spdlog::get("multi_logger"), "JSON to log in was: {}",
+                                        body.c_str());
+                }();
             }
             extra_data = std::move(login_status);
             co_return pro::make_proxy<core::http::proxy::Request>(std::move(new_parser.get()));

@@ -1,10 +1,12 @@
 #include "netdisk-cpp/core/http/Server.hpp"
 #include "netdisk-cpp/core/http/Connection.hpp"
 #include "netdisk-cpp/core/http/Request.hpp"
+#include "netdisk-cpp/utils/Config.h"
 #include "netdisk-cpp/utils/log/Logger.hpp"
 #include "netdisk-cpp/utils/log/formatter/boost/stacktrace/stacktrace.hpp"
 #include "netdisk-cpp/utils/ssl/SSL.hpp"
 #include "netdisk-cpp/utils/url/Matches.hpp"
+
 
 #include <boost/asio/detached.hpp>
 #include <boost/asio/io_context.hpp>
@@ -142,9 +144,12 @@ namespace netdisk::core::http
             }
             catch (const boost::system::system_error& e)
             {
-                SPDLOG_LOGGER_WARN(logger_, "An error occurred while SSL handshake: {}\n{}",
-                                   e.what(),
-                                   boost::stacktrace::stacktrace::from_current_exception());
+                [&]() NO_INLINE
+                {
+                    SPDLOG_LOGGER_WARN(logger_, "An error occurred while SSL handshake: {}\n{}",
+                                       e.what(),
+                                       boost::stacktrace::stacktrace::from_current_exception());
+                }();
             }
             try
             {
@@ -153,9 +158,12 @@ namespace netdisk::core::http
             }
             catch (std::exception const& e)
             {
-                SPDLOG_LOGGER_ERROR(logger_, "An error occoured in session: {}\nStacktrace: \n{}",
-                                    e.what(),
-                                    boost::stacktrace::stacktrace::from_current_exception());
+                [&]() NO_INLINE
+                {
+                    SPDLOG_LOGGER_ERROR(
+                        logger_, "An error occoured in session: {}\nStacktrace: \n{}", e.what(),
+                        boost::stacktrace::stacktrace::from_current_exception());
+                }();
             }
         }
     }
@@ -174,7 +182,7 @@ namespace netdisk::core::http
             co_await boost::beast::http::async_read_header(stream, buffer, header_parser);
             auto request_view = pro::make_proxy_view<proxy::Request>(header_parser.get());
             const auto target = request_view->target();
-            SPDLOG_LOGGER_INFO(logger_, "Processing {}", target);
+            [&]() NO_INLINE { SPDLOG_LOGGER_INFO(logger_, "Processing {}", target); }();
             std::any connection_extra_data;
             Connection connection(stream);
             bool has_uncaught_exception = false;
@@ -211,18 +219,24 @@ namespace netdisk::core::http
             }
             catch (const std::exception& e)
             {
-                SPDLOG_LOGGER_ERROR(
-                    logger_,
-                    "An error occoured while processing request/response: {}\nStacktrace: \n{}",
-                    e.what(), boost::stacktrace::stacktrace::from_current_exception());
+                [&]() NO_INLINE
+                {
+                    SPDLOG_LOGGER_ERROR(
+                        logger_,
+                        "An error occoured while processing request/response: {}\nStacktrace: \n{}",
+                        e.what(), boost::stacktrace::stacktrace::from_current_exception());
+                }();
                 has_uncaught_exception = true;
             }
             catch (...)
             {
-                SPDLOG_LOGGER_ERROR(
-                    logger_,
-                    "An error occoured while processing request/response\nStacktrace: \n{}",
-                    boost::stacktrace::stacktrace::from_current_exception());
+                [&]() NO_INLINE
+                {
+                    SPDLOG_LOGGER_ERROR(
+                        logger_,
+                        "An error occoured while processing request/response\nStacktrace: \n{}",
+                        boost::stacktrace::stacktrace::from_current_exception());
+                }();
                 has_uncaught_exception = true;
             }
             if (has_uncaught_exception)
@@ -308,8 +322,11 @@ namespace netdisk::core::http
                                               extra_data);
             }
         }
-        SPDLOG_LOGGER_INFO(logger_, "HTTP 404 (Not Found): [{}] {}",
-                           boost::beast::http::to_string(method), target);
+        [&]() NO_INLINE
+        {
+            SPDLOG_LOGGER_INFO(logger_, "HTTP 404 (Not Found): [{}] {}",
+                               boost::beast::http::to_string(method), target);
+        }();
         co_return co_await connection.errorReply(boost::beast::http::status::not_found,
                                                  "No such page", config_);
     }

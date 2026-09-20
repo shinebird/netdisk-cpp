@@ -31,8 +31,10 @@
 #if defined(_MSC_VER)
     // __attribute__((always_inline)) seems to be no effect in clang-cl
     #define ALWAYS_INLINE __forceinline
+    #define NO_INLINE __declspec(noinline)
 #else
     #define ALWAYS_INLINE __attribute__((always_inline))
+    #define NO_INLINE __attribute__((noinline))
 #endif
 
 // Pre-C++23 [[assume(expr)]]

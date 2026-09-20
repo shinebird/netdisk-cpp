@@ -3,10 +3,11 @@
 #include <boost/stacktrace/this_thread.hpp>
 #include <boost/type_index.hpp>
 
-
+#include "netdisk-cpp/utils/Config.h"
 #include "netdisk-cpp/utils/exception/SignalHandler.hpp"
 #include "netdisk-cpp/utils/log/Logger.hpp"
 #include "netdisk-cpp/utils/log/formatter/boost/stacktrace/stacktrace.hpp"
+
 
 #include <csignal>
 #include <spdlog/spdlog.h>
@@ -38,15 +39,21 @@ namespace netdisk::utils::exception::signal
         }
         catch (const std::exception& e)
         {
-            SPDLOG_LOGGER_ERROR(spdlog::get("multi_logger"), "The last exception was {}: {}",
-                                boost::typeindex::type_id_runtime(e).pretty_name(), e.what());
+            [&]() NO_INLINE
+            {
+                SPDLOG_LOGGER_ERROR(spdlog::get("multi_logger"), "The last exception was {}: {}",
+                                    boost::typeindex::type_id_runtime(e).pretty_name(), e.what());
+            }();
         }
         try
         {
-            SPDLOG_LOGGER_ERROR(
-                spdlog::get("multi_logger"),
-                "Program crashed, see the following stack trace for more infomation: \n\n{}",
-                boost::stacktrace::stacktrace::from_current_exception());
+            [&]() NO_INLINE
+            {
+                SPDLOG_LOGGER_ERROR(
+                    spdlog::get("multi_logger"),
+                    "Program crashed, see the following stack trace for more infomation: \n\n{}",
+                    boost::stacktrace::stacktrace::from_current_exception());
+            }();
         }
         catch (...)
         {

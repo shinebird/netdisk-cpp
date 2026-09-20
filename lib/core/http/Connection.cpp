@@ -1,5 +1,6 @@
 #include "netdisk-cpp/core/http/Connection.hpp"
 #include "netdisk-cpp/mime_types/MimeTypes.hpp"
+#include "netdisk-cpp/utils/Config.h"
 #include "netdisk-cpp/utils/log/Logger.hpp"
 
 #include <boost/asio/redirect_error.hpp>
@@ -21,19 +22,26 @@ namespace netdisk::core::http
                                 error_code);                                                       \
     if (error_code)                                                                                \
     {                                                                                              \
-        SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"),                                            \
-                           R"(Unable to add CORS headers for response "{}")",                      \
-                           (request)->target());                                                   \
+        [&]() NO_INLINE                                                                            \
+        {                                                                                          \
+            SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"),                                        \
+                               R"(Unable to add CORS headers for response "{}")",                  \
+                               (request)->target());                                               \
+        }();                                                                                       \
     }
+
 #define COMMON_SHUTDOWN_SSL                                                                        \
     if (!request_->keep_alive())                                                                   \
     {                                                                                              \
         if (socket_.shutdown(this->error_code_))                                                   \
         {                                                                                          \
-            SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"),                                        \
-                               "An error occoured while shutting down SSL connection: {}",         \
-                               this->error_code_.message());                                       \
-        }                                                                                          \
+            [&]() NO_INLINE                                                                        \
+            {                                                                                      \
+                SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"),                                    \
+                                   "An error occoured while shutting down SSL connection: {}",     \
+                                   this->error_code_.message());                                   \
+            }();                                                                                   \
+        };                                                                                         \
     }
 
     void Connection::setRequestProxy(Request req) { request_ = std::move(req); }
@@ -113,7 +121,11 @@ namespace netdisk::core::http
                                                                           request_->version()};
         res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
         res.set(boost::beast::http::field::content_type,
-                std::format("multipart/form-data; boundary={}", multipart_context.getBoundary()));
+                [&]() NO_INLINE
+                {
+                    return std::format("multipart/form-data; boundary={}",
+                                       multipart_context.getBoundary());
+                }());
         res.keep_alive(request_->keep_alive());
         for (const auto& item : extra_fields)
         {
@@ -165,8 +177,9 @@ namespace netdisk::core::http
         body.open(path.data(), boost::beast::file_mode::scan, error_code_);
         if (error_code_ == boost::beast::errc::no_such_file_or_directory)
         {
-            co_await errorReply(boost::beast::http::status::not_found,
-                                std::format("The resource was not found in {}", path), config);
+            co_await errorReply(
+                boost::beast::http::status::not_found, [&]() NO_INLINE
+                { return std::format("The resource was not found in {}", path); }(), config);
             co_return;
         }
         auto const size = body.size();
@@ -204,7 +217,8 @@ namespace netdisk::core::http
         boost::beast::http::response<boost::beast::http::string_body> res{
             boost::beast::http::status::moved_permanently, request_->version()};
         const auto host = request_->at(boost::beast::http::field::host);
-        res.set(boost::beast::http::field::location, std::format("https://{}{}", host, new_target));
+        res.set(boost::beast::http::field::location,
+                [&]() NO_INLINE { return std::format("https://{}{}", host, new_target); }());
         res.body() = "";
         res.prepare_payload();
         res.keep_alive(request_->keep_alive());

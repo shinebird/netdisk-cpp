@@ -2,6 +2,7 @@
 #include "netdisk-cpp/controller/http/Common.hpp"
 #include "netdisk-cpp/mime_types/MimeTypes.hpp"
 #include "netdisk-cpp/service/http/FileService.hpp"
+#include "netdisk-cpp/utils/Config.h"
 #include "netdisk-cpp/utils/filesystem/FileQuery.hpp"
 #include "netdisk-cpp/utils/string/StringUtils.hpp"
 #include "netdisk-cpp/utils/url/HTTPParamEncodings.hpp"
@@ -63,9 +64,13 @@ namespace netdisk::controller::http
             }
             else
             {
-                SPDLOG_LOGGER_DEBUG(
-                    spdlog::get("multi_logger"),
-                    "[POST] /service/file/listFiles: Invalid JSON body received: {}", body.c_str());
+                [&]() NO_INLINE
+                {
+                    SPDLOG_LOGGER_DEBUG(
+                        spdlog::get("multi_logger"),
+                        "[POST] /service/file/listFiles: Invalid JSON body received: {}",
+                        body.c_str());
+                }();
             }
             co_return pro::make_proxy<core::http::proxy::Request>(std::move(new_parser.get()));
         }
@@ -95,10 +100,13 @@ namespace netdisk::controller::http
             }
             else
             {
-                SPDLOG_LOGGER_DEBUG(
-                    spdlog::get("multi_logger"),
-                    "[POST] /service/file/checkFileExists: Invalid JSON body received: {}",
-                    body.c_str());
+                [&]() NO_INLINE
+                {
+                    SPDLOG_LOGGER_DEBUG(
+                        spdlog::get("multi_logger"),
+                        "[POST] /service/file/checkFileExists: Invalid JSON body received: {}",
+                        body.c_str());
+                }();
             }
             extra_data = fs_path;
             co_return pro::make_proxy<core::http::proxy::Request>(std::move(new_parser.get()));
@@ -208,8 +216,12 @@ namespace netdisk::controller::http
                 boost::beast::http::fields extra_fields;
                 extra_fields.insert(
                     boost::beast::http::field::content_disposition,
-                    std::format("attachment; {}",
-                                utils::url::encodeContentDispositionFileName("move_path.ps1")));
+                    [&]() NO_INLINE
+                    {
+                        return std::format(
+                            "attachment; {}",
+                            utils::url::encodeContentDispositionFileName("move_path.ps1"));
+                    }());
                 co_return co_await connection.staticBodyReply(
                     boost::beast::http::status::ok, content, content.size(),
                     *utils::mime_type::getMimeTypes(".ps1").begin(), config, extra_fields);
@@ -221,10 +233,14 @@ namespace netdisk::controller::http
                     config.getPort());
                 auto content = utils::string::joinWithNewline(links);
                 boost::beast::http::fields extra_fields;
-                extra_fields.insert(
-                    boost::beast::http::field::content_disposition,
-                    std::format("attachment; {}", utils::url::encodeContentDispositionFileName(
-                                                      "batch_download_link.txt")));
+                extra_fields.insert(boost::beast::http::field::content_disposition,
+                                    [&]() NO_INLINE
+                                    {
+                                        return std::format(
+                                            "attachment; {}",
+                                            utils::url::encodeContentDispositionFileName(
+                                                "batch_download_link.txt"));
+                                    }());
                 co_return co_await connection.staticBodyReply(
                     boost::beast::http::status::ok, content, content.size(),
                     *utils::mime_type::getMimeTypes(".txt").begin(), config, extra_fields);

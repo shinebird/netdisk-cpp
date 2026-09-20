@@ -1,4 +1,5 @@
 #include "netdisk-cpp/repository/generic/User.hpp"
+#include "netdisk-cpp/utils/Config.h"
 
 #include <spdlog/spdlog.h>
 
@@ -25,8 +26,11 @@ namespace netdisk::repository
     {
         if (std::to_underlying(auth) > std::to_underlying(Auth::max_)) [[unlikely]]
         {
-            SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"), "Invalid auth: {}",
-                               std::to_underlying(auth));
+            [&]() NO_INLINE
+            {
+                SPDLOG_LOGGER_WARN(spdlog::get("multi_logger"), "Invalid auth: {}",
+                                   std::to_underlying(auth));
+            }();
         }
         this->auth_ = auth;
     }
