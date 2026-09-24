@@ -113,7 +113,7 @@ namespace netdisk::service::http
                        });
         const auto paths_with_index = paths | std::views::enumerate;
         std::transform(std::execution::par_unseq, paths_with_index.begin(), paths_with_index.end(),
-                       result.end(),
+                       result.begin() + dirs.size(),
                        [](const auto& elem)
                        {
                            const auto& [index, path] = elem;
@@ -133,6 +133,7 @@ namespace netdisk::service::http
         if (!utils::filesystem::isDirectory(file_path).value_or(false))
         {
             paths.emplace_back(std::filesystem::relative(file_path, path));
+            return;
         }
         for (const auto& entry : std::filesystem::directory_iterator(
                  file_path, std::filesystem::directory_options::follow_directory_symlink |
